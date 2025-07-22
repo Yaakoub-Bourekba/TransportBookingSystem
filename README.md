@@ -34,9 +34,17 @@ git clone https://github.com/Yaakoub-Bourekba/TransportBookingSystem.git
 cd TransportBookingSystem
 ```
 3. Install dependencies:
-```npm install```
-4. npm run dev
-5. http://localhost:3000
+```
+npm install
+```
+4. Run the development server:
+```
+npm run dev
+```
+5. Open your browser at:
+```
+http://localhost:3000
+```
 
 ---
 
@@ -63,11 +71,19 @@ TransportBookingSystem/
 
 ## 🧑‍💻 Contribution
 
-Contributions are welcome!
 1. Fork the repository
-2. Create a new branch (git checkout -b feature-name)
-3. Commit your changes (git commit -m 'Add new feature')
-4. Push to the branch (git push origin feature-name)
+2. Create a new branch:
+```
+git checkout -b feature-name
+```
+3. Commit your changes:
+```
+git commit -m 'Add new feature'
+```
+4. Push to the branch:
+```
+git push origin feature-name
+```
 5. Open a Pull Request
 
 ---
@@ -80,7 +96,7 @@ This project is licensed under the MIT License.
 
  ## 📌 Notes
  
-Future improvements could include a mobile-friendly version or SMS notifications for trip confirmations.
-The system can be expanded to support intercity transport or ride-sharing services.
+.Future improvements could include a mobile-friendly version or SMS notifications for trip confirmations.
+.The system can be expanded to support intercity transport or ride-sharing services.
 
 ---
