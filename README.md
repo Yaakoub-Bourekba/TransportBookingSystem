@@ -1,6 +1,6 @@
 # 🚌 Online Transportation Booking System
 
-A comprehensive web application designed to simplify transportation service management and facilitate electronic trip bookings. This system offers a unified platform for passengers, drivers, and administrators to handle trips and reservations efficiently—reducing manual processes and improving trip coordination.
+   A comprehensive web application designed to simplify transportation service management and facilitate electronic trip bookings. This system offers a unified platform for passengers, drivers, and administrators to handle trips and reservations efficiently—reducing manual processes and improving trip coordination.
 
 ---
 
@@ -26,6 +26,7 @@ A comprehensive web application designed to simplify transportation service mana
 ## ⚙️ How to Run Locally
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/Yaakoub-Bourekba/TransportBookingSystem.git
 ```
@@ -96,7 +97,7 @@ This project is licensed under the MIT License.
 
  ## 📌 Notes
  
-.Future improvements could include a mobile-friendly version or SMS notifications for trip confirmations.
-.The system can be expanded to support intercity transport or ride-sharing services.
+- Future improvements could include a mobile-friendly version or SMS notifications for trip confirmations.
+- The system can be expanded to support intercity transport or ride-sharing services.
 
 ---
