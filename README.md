@@ -53,21 +53,67 @@ http://localhost:3000
 
 ```
 TransportBookingSystem/
-├── config/                 # Configuration files (e.g., database settings)
-├── controllers/            # Logic for handling requests and responses
-├── middleware/             # Custom middleware functions
-├── models/                 # Database models and schemas
-├── node_modules/           # Installed dependencies (auto-generated)
-├── public/                 # Static assets (CSS, JS, images)
-├── routes/                 # Application routes
-├── views/                  # Frontend templates (e.g., EJS files)
-├── .env                    # Environment variables (not committed)
-├── .DS_Store               # System file (can be ignored)
-├── package.json            # Project metadata and dependencies
-├── package-lock.json       # Dependency lock file
-├── server.js               # Entry point of the application
-├── transportservicedb.sql  # SQL file for database setup
+│
+├── config/
+│   └── db.js
+│
+├── controllers/
+│   ├── auth.controller.js
+│   ├── chauffeur.controller.js
+│   ├── payment.controller.js
+│   ├── reservation.controller.js
+│   ├── service.controller.js
+│   ├── trajet.controller.js
+│   ├── transport.controller.js
+│   └── user.controller.js
+│
+├── middleware/
+│   └── authMiddleware.js
+│
+├── models/
+│   ├── chauffeur.model.js
+│   ├── payment.model.js
+│   ├── reservation.model.js
+│   ├── service.model.js
+│   ├── trajet.model.js
+│   ├── transport.model.js
+│   └── user.model.js
+│
+├── public/
+│   ├──
+│   ├──
+│   ├──
+│   └──
+│
+├── routes/
+│   ├── auth.routes.js
+│   ├── chauffeur.routes.js
+│   ├── payment.routes.js
+│   ├── reservation.routes.js
+│   ├── routes.js
+│   ├── service.routes.js
+│   ├── trajet.routes.js
+│   ├── transport.routes.js
+│   └── user.routes.js
+│
+├── utils/
+│
+├── views/
+│   ├── admib-dashboard.html
+│   ├── cachier-dashboard.html
+│   ├── driver-dashboard.html
+│   ├── home.html
+│   ├── login_reg.html
+│   ├── passenger-dashboard.html
+│   └── reset.html
+│
+├── .env
+├── package-lock.json
+├── package.json
+├── server.js
+└── transportservicedb.sql  # SQL file for database setup
 ```
+
 ---
 
 ## 🧑‍💻 Contribution
