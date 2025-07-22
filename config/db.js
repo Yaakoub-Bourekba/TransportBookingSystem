@@ -9,8 +9,8 @@ const connectDB = async () => {
   try {
     connection = await mysql.createConnection({
       host: process.env.HOST,
-      user: process.env.USER,
-      passsword: '',
+      user: 'root',
+      password: '',
       database: process.env.DATABASE,
       port:process.env.DBPORT
     });

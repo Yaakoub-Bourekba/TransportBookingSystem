@@ -31,6 +31,12 @@ res.sendFile(path.join(__dirname,'../','views','admin-dashboard.html'));
 router.get('/driver',(req,res)=>{
 res.sendFile(path.join(__dirname,'../','views','driver-dashboard.html'));
 });
+router.get('/caissier',(req,res)=>{
+res.sendFile(path.join(__dirname,'../','views','cachier-dashboard.html'));
+});
+router.get('/reset',(req,res)=>{
+res.sendFile(path.join(__dirname,'../','views','reset.html'));
+});
 // Auth & Profile
 router.use('/api', authRoutes);               // login, register, profile, password
 router.use('/api/admin', userRoutes);         // admin: user management
@@ -45,11 +51,13 @@ router.use('/api/reservations', reservationRoutes); // all reservation logic
 router.use('/api/trajets', trajetRoutes);     // trips (assigned, modify, etc.)
 
 // Payments (Cashier)
-router.use('/api/payments', paymentRoutes);   // mark as paid/unpaid
+router.use('/api/payments', paymentRoutes);   // mark as paid/reject
 
 // Transport Management (Admin)
 router.use('/api/transports', transportRoutes);     // transport types
 
+import adminRoutes from './user.routes.js';
+router.use('/api/admin', adminRoutes);
 
 
 // Services (Admin)

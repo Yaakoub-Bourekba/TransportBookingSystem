@@ -3,7 +3,8 @@ import {
   activateUser,
   deactivateUser,
   resetPassword,
-  searchUsers
+  searchUsers,
+  getUpdateUserProfile
 } from '../controllers/user.controller.js';
 
 import { protect, adminOnly } from '../middleware/authMiddleware.js';
@@ -12,8 +13,9 @@ const router = Router();
 
 // Admin-only routes
 router.post('/:id/activate', protect, adminOnly, activateUser);        // Activate user
-router.post('/:id/deactivate', protect, adminOnly, deactivateUser);    // Deactivate user
-router.post('/:id/reset-password', protect, adminOnly, resetPassword); // Reset password
+router.post('/:id/deactivate', protect,  deactivateUser);    // Deactivate user
+router.post('/:id/reset-password', protect, resetPassword); // Reset password
+router.get('/admin/:id', protect,  getUpdateUserProfile); // Reset password
 router.get('/search', protect, adminOnly, searchUsers);                // Search users
 
 export default router;

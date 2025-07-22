@@ -18,19 +18,19 @@ export const updateTripStatusById = async (trajetId, status, driverId) => {
 };
 
 // 3. Create a new trip (by admin)
-export const createTrajet = async (depart, destination, heureDepart, idChauffeur, idMoyen, idService) => {
+export const createTrajet = async (depart, destination) => {
   const [result] = await connection.execute(
-    'INSERT INTO Trajet (depart, destination, heureDepart, idChauffeur, idMoyen, idService) VALUES (?, ?, ?, ?, ?, ?)',
-    [depart, destination, heureDepart, idChauffeur, idMoyen, idService]
+    'INSERT INTO Trajet (lieuDepart, lieuArrivee) VALUES (?, ?)',
+    [depart, destination]
   );
   return result;
 };
 
 // 4. Update trip info (by admin)
-export const updateTrajetById = async (id, depart, destination, heureDepart) => {
+export const updateTrajetById = async (id, depart, destination) => {
   await connection.execute(
-    'UPDATE Trajet SET depart = ?, destination = ?, heureDepart = ? WHERE idTrajet = ?',
-    [depart, destination, heureDepart, id]
+    'UPDATE Trajet SET lieuDepart = ?, lieuArrivee = ? WHERE idTrajet = ?',
+    [depart, destination, id]
   );
 };
 
@@ -51,10 +51,35 @@ export const searchTrajets = async (destination) => {
   return rows;
 };
 // 7. search fom home all trips for specific date
-export const getAllTripsForUser = async (depart, destination, date, heureDepart) => {
+export const getAllTripsForUser = async (depart, destination) => {
   const [data] = await connection.execute(
-    'SELECT * FROM Trajet WHERE depart = ? AND destination = ? AND heureDepart = ? AND date = ?',
-    [depart, destination, heureDepart, date]
+    `SELECT 
+      t.idTrajet,
+      t.lieuDepart AS depart,
+      t.lieuArrivee AS destination,
+      s.heureDepart,
+      s.heureArrivee,
+      s.prix,
+      s.idService
+   FROM Trajet t
+   JOIN ServiceDeTransport s ON t.idTrajet = s.idTrajet
+   WHERE t.lieuDepart = ? AND t.lieuArrivee = ?`,
+    [depart, destination]
   );
   return data;
 };
+export const getAllMainTripsForUser = async () => {
+  const [data] = await connection.execute(
+    `SELECT * FROM Trajet`,
+  );
+  return data;
+};
+export const getTripById = async (id) => {
+  const [data] = await connection.execute(
+    `SELECT * FROM Trajet WHERE idtrajet = ?`,
+    [id]
+  );
+  return data;
+};
+
+

@@ -5,12 +5,18 @@ import {
   updateReservation,
   deleteReservation,
   markAsPaid,
-  markAsUnpaid
+  markAsUnpaid,
+  filterReservationsByDate,
+   getReservationsByDateController
 } from '../controllers/reservation.controller.js';
 
 import { protect, hasRole } from '../middleware/authMiddleware.js';
 
 const router = Router();
+router.post('/by-date', protect, hasRole(['admin', 'passenger']), filterReservationsByDate);
+router.post('/by-date', protect, hasRole(['passenger']), getReservationsByDateController);
+
+ 
 
 // 👤 Passenger: Make and manage their reservations
 router.post('/', protect, hasRole(['passenger']), createReservation);

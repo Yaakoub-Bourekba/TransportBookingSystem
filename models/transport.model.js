@@ -26,10 +26,18 @@ export const deleteTransportById = async (id) => {
 };
 
 // 4. Search transports by type
-export const searchTransports = async (type) => {
+export const searchTransports = async (idvehicle) => {
   const [rows] = await connection.execute(
-    'SELECT * FROM MoyenDeTransport WHERE type LIKE ?',
-    [`%${type}%`]
+    'SELECT * FROM MoyenDeTransport WHERE idmoyen = ?',
+    [idvehicle]
   );
+  return rows;
+};
+// 4. Search transports by type
+export const searchTransportsAll = async () => {
+  
+  const [rows] = await connection.execute(
+    'SELECT * FROM MoyenDeTransport ');
+    
   return rows;
 };

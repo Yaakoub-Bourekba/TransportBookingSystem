@@ -1,1232 +1,867 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tableau de Bord Caissier</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    :root {
-      --primary: #4f46e5;
-      --primary-light: #6366f1;
-      --primary-dark: #4338ca;
-      --secondary: #f59e0b;
-      --success: #10b981;
-      --danger: #ef4444;
-      --warning: #f59e0b;
-      --info: #3b82f6;
-      --light: #f8fafc;
-      --dark: #1e293b;
-      --gray: #64748b;
-      --sidebar-width: 280px;
-    }
-    
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f1f5f9;
-      color: var(--dark);
-    }
-    
-    /* Sidebar */
-    .sidebar {
-      width: var(--sidebar-width);
-      height: 100vh;
-      position: fixed;
-      left: 0;
-      top: 0;
-      background: white;
-      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
-      transition: all 0.3s;
-      z-index: 1000;
-    }
-    
-    .sidebar-header {
-      padding: 1.5rem;
-      border-bottom: 1px solid #e2e8f0;
-    }
-    
-    .sidebar-menu {
-      padding: 1rem 0;
-    }
-    
-    .menu-title {
-      padding: 0.5rem 1.5rem;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--gray);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    
-    .menu-item {
-      display: flex;
-      align-items: center;
-      padding: 0.75rem 1.5rem;
-      color: var(--dark);
-      text-decoration: none;
-      transition: all 0.2s;
-    }
-    
-    .menu-item:hover, .menu-item.active {
-      background-color: #f1f5f9;
-      color: var(--primary);
-    }
-    
-    .menu-item i {
-      width: 24px;
-      margin-right: 12px;
-      font-size: 1rem;
-      text-align: center;
-    }
-    
-    /* Main content */
-    .main-content {
-      margin-left: var(--sidebar-width);
-      min-height: 100vh;
-      transition: all 0.3s;
-    }
-    
-    /* Navbar */
-    .navbar {
-      height: 70px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-      background: white;
-    }
-    
-    .user-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-    
-    /* Cards */
-    .stat-card {
-      border-radius: 12px;
-      border: none;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-      transition: transform 0.3s;
-    }
-    
-    .stat-card:hover {
-      transform: translateY(-5px);
-    }
-    
-    .stat-icon {
-      width: 50px;
-      height: 50px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-      color: white;
-    }
-    
-    /* Tables */
-    .data-table {
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    }
-    
-    .badge {
-      padding: 0.35em 0.65em;
-      font-weight: 500;
-    }
-    
-    /* Responsive */
-    @media (max-width: 992px) {
-      .sidebar {
-        transform: translateX(-100%);
-      }
-      
-      .sidebar.active {
-        transform: translateX(0);
-      }
-      
-      .main-content {
-        margin-left: 0;
-      }
-      
-      .menu-toggle {
-        display: block !important;
-      }
-    }
-    
-    /* Toggle button for mobile */
-    .menu-toggle {
-      display: none;
-      background: var(--primary);
-      color: white;
-      border: none;
-      width: 40px;
-      height: 40px;
-      border-radius: 8px;
-      font-size: 1.25rem;
-    }
-    
-    /* Modal */
-    .modal-content {
-      border-radius: 12px;
-      border: none;
-    }
-    
-    /* Custom scrollbar */
-    ::-webkit-scrollbar {
-      width: 8px;
-    }
-    
-    ::-webkit-scrollbar-track {
-      background: #f1f1f1;
-    }
-    
-    ::-webkit-scrollbar-thumb {
-      background: #c1c1c1;
-      border-radius: 4px;
-    }
-    
-    ::-webkit-scrollbar-thumb:hover {
-      background: #a8a8a8;
-    }
-    
-    /* Payment status */
-    .payment-status {
-      font-size: 0.75rem;
-      font-weight: 600;
-      padding: 0.25rem 0.75rem;
-      border-radius: 50px;
-    }
-    
-    /* Search box */
-    .search-box {
-      position: relative;
-    }
-    
-    .search-box input {
-      padding-left: 40px;
-    }
-    
-    .search-box i {
-      position: absolute;
-      left: 15px;
-      top: 12px;
-      color: var(--gray);
-    }
-  </style>
-</head>
-<body>
-  <!-- Sidebar -->
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <h4 class="mb-0 text-primary">VoyagePlus</h4>
-      <small class="text-muted">Tableau de bord Caissier</small>
-    </div>
-    
-    <div class="sidebar-menu">
-      <div class="menu-title">Navigation</div>
-      <a href="#" class="menu-item active" data-section="dashboard">
-        <i class="fas fa-tachometer-alt"></i>
-        <span>Tableau de bord</span>
-      </a>
-      
-      <div class="menu-title">Gestion des Paiements</div>
-      <a href="#" class="menu-item" data-section="reservations">
-        <i class="fas fa-ticket-alt"></i>
-        <span>Réservations</span>
-      </a>
-      <a href="#" class="menu-item" data-section="payments">
-        <i class="fas fa-credit-card"></i>
-        <span>Paiements</span>
-      </a>
-      <a href="#" class="menu-item" data-section="process-payment">
-        <i class="fas fa-cash-register"></i>
-        <span>Traiter un paiement</span>
-      </a>
-      
-      <div class="menu-title">Mon Compte</div>
-      <a href="#" class="menu-item" data-section="profile">
-        <i class="fas fa-user"></i>
-        <span>Mon profil</span>
-      </a>
-      <a href="#" class="menu-item" data-section="password">
-        <i class="fas fa-key"></i>
-        <span>Changer mot de passe</span>
-      </a>
-    </div>
-  </div>
-
-  <!-- Main Content -->
-  <div class="main-content">
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand navbar-light sticky-top">
-      <div class="container-fluid">
-        <button class="menu-toggle me-3" id="menuToggle">
-          <i class="fas fa-bars"></i>
-        </button>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservation Approval - Cashier</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+         :root {
+            --primary-color: #007bff;
+            /* Bootstrap Primary */
+            --success-color: #28a745;
+            /* Bootstrap Success */
+            --danger-color: #dc3545;
+            /* Bootstrap Danger */
+            --warning-color: #ffc107;
+            /* Bootstrap Warning */
+            --text-dark: #1e2387;
+            --text-muted: #6c757d;
+            --body-bg: linear-gradient(to right, #e3e5fa, #e9efff);
+            --card-bg: #ffffff;
+            --border-color: #dee2e6;
+        }
         
-        <div class="d-flex align-items-center ms-auto">
-          <div class="dropdown">
-            <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
-              <img src="https://ui-avatars.com/api/?name=Caissier&background=4f46e5&color=fff" alt="Caissier" class="user-avatar me-2">
-              <span class="d-none d-md-inline">Caissier</span>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownUser">
-              <li><a class="dropdown-item" href="#" data-section="profile"><i class="fas fa-user-cog me-2"></i> Mon profil</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item text-danger" href="#" id="logoutBtn"><i class="fas fa-sign-out-alt me-2"></i> Déconnexion</a></li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </nav>
-
-    <!-- Page Content -->
-    <div class="container-fluid py-4">
-      <!-- Dashboard Section (Default) -->
-      <div class="section-content" id="dashboard-section">
-        <h4 class="mb-4">Tableau de bord</h4>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
         
-        <div class="row g-4 mb-4">
-          <div class="col-md-6 col-lg-3">
-            <div class="card stat-card">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h6 class="text-muted mb-2">Paiements aujourd'hui</h6>
-                    <h3 class="mb-0">24</h3>
-                    <small class="text-success"><i class="fas fa-arrow-up me-1"></i> 12%</small>
-                  </div>
-                  <div class="stat-icon bg-primary">
-                    <i class="fas fa-coins"></i>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="col-md-6 col-lg-3">
-            <div class="card stat-card">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h6 class="text-muted mb-2">Montant aujourd'hui</h6>
-                    <h3 class="mb-0">42,500 DA</h3>
-                    <small class="text-success"><i class="fas fa-arrow-up me-1"></i> 8%</small>
-                  </div>
-                  <div class="stat-icon bg-success">
-                    <i class="fas fa-money-bill-wave"></i>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="col-md-6 col-lg-3">
-            <div class="card stat-card">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h6 class="text-muted mb-2">Réservations impayées</h6>
-                    <h3 class="mb-0">8</h3>
-                    <small class="text-danger"><i class="fas fa-arrow-up me-1"></i> 2</small>
-                  </div>
-                  <div class="stat-icon bg-danger">
-                    <i class="fas fa-exclamation-circle"></i>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="col-md-6 col-lg-3">
-            <div class="card stat-card">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h6 class="text-muted mb-2">Remboursements</h6>
-                    <h3 class="mb-0">3</h3>
-                    <small class="text-danger"><i class="fas fa-arrow-up me-1"></i> 1</small>
-                  </div>
-                  <div class="stat-icon bg-warning">
-                    <i class="fas fa-exchange-alt"></i>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        body {
+            background: var(--body-bg);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
         
-        <div class="row g-4">
-          <div class="col-lg-8">
-            <div class="card">
-              <div class="card-body">
-                <h5 class="card-title">Paiements récents</h5>
-                <div class="table-responsive">
-                  <table class="table table-hover">
-                    <thead>
-                      <tr>
-                        <th>ID</th>
-                        <th>Réservation</th>
-                        <th>Montant</th>
-                        <th>Méthode</th>
-                        <th>Statut</th>
-                        <th>Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>PAY-789456</td>
-                        <td>RES-789456</td>
-                        <td>1,200 DA</td>
-                        <td>Carte</td>
-                        <td><span class="badge bg-success">Complété</span></td>
-                        <td>10/06/2023 14:30</td>
-                      </tr>
-                      <tr>
-                        <td>PAY-123456</td>
-                        <td>RES-123456</td>
-                        <td>1,500 DA</td>
-                        <td>Espèces</td>
-                        <td><span class="badge bg-success">Complété</span></td>
-                        <td>10/06/2023 11:45</td>
-                      </tr>
-                      <tr>
-                        <td>PAY-654321</td>
-                        <td>RES-654321</td>
-                        <td>1,800 DA</td>
-                        <td>Virement</td>
-                        <td><span class="badge bg-warning">En attente</span></td>
-                        <td>10/06/2023 10:20</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="col-lg-4">
-            <div class="card">
-              <div class="card-body">
-                <h5 class="card-title">Statut des paiements</h5>
-                <canvas id="paymentChart" height="250"></canvas>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Reservations Section -->
-      <div class="section-content d-none" id="reservations-section">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <h4>Gestion des Réservations</h4>
-          <div class="search-box">
-            <i class="fas fa-search"></i>
-            <input type="text" class="form-control" placeholder="Rechercher une réservation..." id="reservationSearch">
-          </div>
-        </div>
+        .container {
+            max-width: 1140px;
+            /* Standard container width */
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            /* Responsive padding */
+        }
         
-        <div class="card">
-          <div class="card-body">
-            <div class="table-responsive">
-              <table class="table table-hover" id="reservationsTable">
-                <thead>
-                  <tr>
-                    <th>Référence</th>
-                    <th>Client</th>
-                    <th>Trajet</th>
-                    <th>Date/Heure</th>
-                    <th>Montant</th>
-                    <th>Statut Paiement</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>RES-789456</td>
-                    <td>Jean Dupont</td>
-                    <td>Alger → Oran</td>
-                    <td>15/06/2023 08:30</td>
-                    <td>1,200 DA</td>
-                    <td><span class="badge bg-success">Payé</span></td>
-                    <td>
-                      <button class="btn btn-sm btn-outline-primary me-1 view-reservation">
-                        <i class="fas fa-eye"></i>
-                      </button>
-                      <button class="btn btn-sm btn-outline-info process-payment" disabled>
-                        <i class="fas fa-credit-card"></i>
-                      </button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>RES-123456</td>
-                    <td>Marie Lambert</td>
-                    <td>Oran → Constantine</td>
-                    <td>12/06/2023 14:15</td>
-                    <td>1,500 DA</td>
-                    <td><span class="badge bg-success">Payé</span></td>
-                    <td>
-                      <button class="btn btn-sm btn-outline-primary me-1 view-reservation">
-                        <i class="fas fa-eye"></i>
-                      </button>
-                      <button class="btn btn-sm btn-outline-info process-payment" disabled>
-                        <i class="fas fa-credit-card"></i>
-                      </button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>RES-654321</td>
-                    <td>Pierre Martin</td>
-                    <td>Alger → Annaba</td>
-                    <td>20/06/2023 07:00</td>
-                    <td>1,800 DA</td>
-                    <td><span class="badge bg-danger">Non payé</span></td>
-                    <td>
-                      <button class="btn btn-sm btn-outline-primary me-1 view-reservation">
-                        <i class="fas fa-eye"></i>
-                      </button>
-                      <button class="btn btn-sm btn-outline-info process-payment">
-                        <i class="fas fa-credit-card"></i>
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Payments Section -->
-      <div class="section-content d-none" id="payments-section">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <h4>Historique des Paiements</h4>
-          <div class="search-box">
-            <i class="fas fa-search"></i>
-            <input type="text" class="form-control" placeholder="Rechercher un paiement..." id="paymentSearch">
-          </div>
-        </div>
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
         
-        <div class="card">
-          <div class="card-body">
-            <div class="table-responsive">
-              <table class="table table-hover" id="paymentsTable">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Réservation</th>
-                    <th>Client</th>
-                    <th>Montant</th>
-                    <th>Méthode</th>
-                    <th>Statut</th>
-                    <th>Date</th>
-                    <th>Caissier</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>PAY-789456</td>
-                    <td>RES-789456</td>
-                    <td>Jean Dupont</td>
-                    <td>1,200 DA</td>
-                    <td>Carte de crédit</td>
-                    <td><span class="badge bg-success">Complété</span></td>
-                    <td>10/06/2023 14:30</td>
-                    <td>Mohamed K.</td>
-                  </tr>
-                  <tr>
-                    <td>PAY-123456</td>
-                    <td>RES-123456</td>
-                    <td>Marie Lambert</td>
-                    <td>1,500 DA</td>
-                    <td>Espèces</td>
-                    <td><span class="badge bg-success">Complété</span></td>
-                    <td>10/06/2023 11:45</td>
-                    <td>Ali B.</td>
-                  </tr>
-                  <tr>
-                    <td>PAY-654321</td>
-                    <td>RES-654321</td>
-                    <td>Pierre Martin</td>
-                    <td>1,800 DA</td>
-                    <td>Virement</td>
-                    <td><span class="badge bg-warning">En attente</span></td>
-                    <td>10/06/2023 10:20</td>
-                    <td>Karim M.</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Process Payment Section -->
-      <div class="section-content d-none" id="process-payment-section">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <h4>Traiter un Paiement</h4>
-          <button class="btn btn-outline-secondary" data-section="payments">
-            <i class="fas fa-arrow-left me-2"></i>Retour
-          </button>
-        </div>
+        .header-title {
+            font-size: 1.75rem;
+            /* Slightly larger */
+            font-weight: 600;
+            color: var(--text-dark);
+        }
         
-        <div class="row">
-          <div class="col-lg-8">
-            <div class="card mb-4">
-              <div class="card-body">
-                <h5 class="card-title">Rechercher une réservation</h5>
-                <form id="searchReservationForm">
-                  <div class="row">
-                    <div class="col-md-6 mb-3">
-                      <label class="form-label">Référence réservation</label>
-                      <input type="text" class="form-control" id="reservationReference" placeholder="RES-123456">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                      <label class="form-label">Nom du client</label>
-                      <input type="text" class="form-control" id="clientName" placeholder="Nom du client">
-                    </div>
-                  </div>
-                  <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-search me-1"></i> Rechercher
-                  </button>
-                </form>
-              </div>
-            </div>
-            
-            <div class="card d-none" id="reservationDetailsCard">
-              <div class="card-body">
-                <h5 class="card-title">Détails de la réservation</h5>
-                <div id="reservationDetailsContent">
-                  <!-- Will be populated by JavaScript -->
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="col-lg-4">
-            <div class="card">
-              <div class="card-body">
-                <h5 class="card-title">Paiement</h5>
-                <form id="paymentForm">
-                  <div class="mb-3">
-                    <label class="form-label">Montant à payer</label>
-                    <input type="text" class="form-control" id="paymentAmount" readonly>
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">Méthode de paiement</label>
-                    <select class="form-select" id="paymentMethod" required>
-                      <option value="">Sélectionner</option>
-                      <option value="credit_card">Carte de crédit</option>
-                      <option value="cash">Espèces</option>
-                      <option value="bank_transfer">Virement bancaire</option>
-                      <option value="check">Chèque</option>
-                    </select>
-                  </div>
-                  <div id="creditCardFields" class="d-none">
-                    <div class="mb-3">
-                      <label class="form-label">Numéro de carte</label>
-                      <input type="text" class="form-control" placeholder="1234 5678 9012 3456">
-                    </div>
-                    <div class="row">
-                      <div class="col-md-6 mb-3">
-                        <label class="form-label">Date d'expiration</label>
-                        <input type="text" class="form-control" placeholder="MM/AA">
-                      </div>
-                      <div class="col-md-6 mb-3">
-                        <label class="form-label">CVV</label>
-                        <input type="text" class="form-control" placeholder="123">
-                      </div>
-                    </div>
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">Montant reçu</label>
-                    <input type="number" class="form-control" id="amountReceived" required>
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">Monnaie rendue</label>
-                    <input type="text" class="form-control" id="changeAmount" readonly>
-                  </div>
-                  <button type="submit" class="btn btn-primary w-100">
-                    <i class="fas fa-check-circle me-1"></i> Confirmer le paiement
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Profile Section -->
-      <div class="section-content d-none" id="profile-section">
-        <h4 class="mb-4">Mon Profil</h4>
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            /* Reduced gap */
+            cursor: pointer;
+            position: relative;
+        }
         
-        <div class="row">
-          <div class="col-lg-4">
-            <div class="card">
-              <div class="card-body text-center">
-                <img src="https://ui-avatars.com/api/?name=Caissier&background=4f46e5&color=fff" alt="Caissier" class="rounded-circle mb-3" width="120">
-                <h5>Caissier</h5>
-                <p class="text-muted">Caissier Principal</p>
-                
-                <button class="btn btn-outline-primary btn-sm">
-                  <i class="fas fa-camera me-1"></i> Changer photo
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          <div class="col-lg-8">
-            <div class="card">
-              <div class="card-body">
-                <h5 class="card-title">Informations personnelles</h5>
-                <form>
-                  <div class="mb-3">
-                    <label class="form-label">Nom complet</label>
-                    <input type="text" class="form-control" value="Caissier">
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">Email</label>
-                    <input type="email" class="form-control" value="caissier@voyageplus.com">
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">Téléphone</label>
-                    <input type="tel" class="form-control" value="+213 123 456 789">
-                  </div>
-                  <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save me-1"></i> Enregistrer
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Password Section -->
-      <div class="section-content d-none" id="password-section">
-        <div class="row justify-content-center">
-          <div class="col-lg-8">
-            <div class="card">
-              <div class="card-body">
-                <h4 class="mb-4">Changer mon mot de passe</h4>
-                
-                <form>
-                  <div class="mb-3">
-                    <label class="form-label">Ancien mot de passe</label>
-                    <input type="password" class="form-control">
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">Nouveau mot de passe</label>
-                    <input type="password" class="form-control">
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">Confirmer mot de passe</label>
-                    <input type="password" class="form-control">
-                  </div>
-                  <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-key me-1"></i> Mettre à jour
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Reservation Details Modal -->
-  <div class="modal fade" id="reservationDetailsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Détails de la réservation</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body" id="modalReservationDetails">
-          <!-- Will be populated by JavaScript -->
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Payment Receipt Modal -->
-  <div class="modal fade" id="paymentReceiptModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Reçu de paiement</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body" id="paymentReceiptContent">
-          <!-- Will be populated by JavaScript -->
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-          <button type="button" class="btn btn-primary" id="printReceiptBtn">
-            <i class="fas fa-print me-1"></i> Imprimer
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    // Sample data
-    const reservations = [
-      {
-        id: 'RES-789456',
-        client: 'Jean Dupont',
-        departure: 'Alger',
-        arrival: 'Oran',
-        date: '2023-06-15',
-        time: '08:30',
-        seat: 'A12',
-        price: 1200,
-        status: 'confirmed',
-        paymentStatus: 'paid',
-        vehicle: 'Bus 45 (AB-12345)',
-        driver: 'Mohamed K.'
-      },
-      {
-        id: 'RES-123456',
-        client: 'Marie Lambert',
-        departure: 'Oran',
-        arrival: 'Constantine',
-        date: '2023-06-12',
-        time: '14:15',
-        seat: 'B07',
-        price: 1500,
-        status: 'completed',
-        paymentStatus: 'paid',
-        vehicle: 'Bus 32 (OR-54321)',
-        driver: 'Ali B.'
-      },
-      {
-        id: 'RES-654321',
-        client: 'Pierre Martin',
-        departure: 'Alger',
-        arrival: 'Annaba',
-        date: '2023-06-20',
-        time: '07:00',
-        seat: 'C15',
-        price: 1800,
-        status: 'pending',
-        paymentStatus: 'unpaid',
-        vehicle: 'Bus 12 (AN-98765)',
-        driver: 'Karim M.'
-      }
-    ];
-    
-    const payments = [
-      {
-        id: 'PAY-789456',
-        reservationId: 'RES-789456',
-        client: 'Jean Dupont',
-        amount: 1200,
-        method: 'credit_card',
-        status: 'completed',
-        date: '2023-06-10 14:30',
-        cashier: 'Mohamed K.'
-      },
-      {
-        id: 'PAY-123456',
-        reservationId: 'RES-123456',
-        client: 'Marie Lambert',
-        amount: 1500,
-        method: 'cash',
-        status: 'completed',
-        date: '2023-06-10 11:45',
-        cashier: 'Ali B.'
-      },
-      {
-        id: 'PAY-654321',
-        reservationId: 'RES-654321',
-        client: 'Pierre Martin',
-        amount: 1800,
-        method: 'bank_transfer',
-        status: 'pending',
-        date: '2023-06-10 10:20',
-        cashier: 'Karim M.'
-      }
-    ];
-
-    // Initialize the dashboard
-    document.addEventListener('DOMContentLoaded', function() {
-      // Initialize chart
-      initPaymentChart();
-      
-      // Set up event listeners
-      setupEventListeners();
-    });
-    
-    function initPaymentChart() {
-      const ctx = document.getElementById('paymentChart').getContext('2d');
-      const paymentChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: ['Complétés', 'En attente', 'Échoués'],
-          datasets: [{
-            data: [65, 15, 20],
-            backgroundColor: [
-              '#10b981',
-              '#f59e0b',
-              '#ef4444'
-            ],
-            borderWidth: 0
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              position: 'bottom'
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            /* Theme color */
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            /* Slightly less bold */
+            font-size: 0.9rem;
+        }
+        
+        .user-name {
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+        
+        .user-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            /* Added spacing */
+            right: 0;
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 5px 15px #0000001a;
+            /* Softer shadow */
+            padding: 0;
+            /* Remove padding, handle with list items */
+            width: 220px;
+            display: none;
+            z-index: 100;
+            overflow: hidden;
+            /* For rounded corners on items */
+        }
+        
+        .user-dropdown.active {
+            display: block;
+        }
+        
+        .user-dropdown-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .user-dropdown-header strong {
+            font-weight: 600;
+        }
+        
+        .user-dropdown-header div:last-child {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        
+        .user-dropdown .logout-btn {
+            display: flex;
+            /* Align icon and text */
+            align-items: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            text-align: left;
+            /* Align text to left */
+            background: transparent;
+            border-radius: 0;
+            /* No radius for list item feel */
+            color: var(--danger-color);
+            /* Danger color for logout */
+            text-decoration: none;
+            margin-top: 0;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .user-dropdown .logout-btn i {
+            font-size: 1.1rem;
+        }
+        
+        .user-dropdown .logout-btn:hover {
+            background: rgba(var(--danger-rgb), 0.05);
+            /* Very subtle hover */
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            /* Standardized padding */
+            border-radius: 6px;
+            /* Softer radius */
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            font-size: 0.9rem;
+            display: inline-flex;
+            /* For icon alignment */
+            align-items: center;
+            gap: 0.4rem;
+        }
+        
+        .btn i {
+            font-size: 1.1em;
+            /* Relative to button font size */
+        }
+        
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #1f8037;
+            /* Darker success */
+        }
+        
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #b02a37;
+            /* Darker danger */
+        }
+        
+        .btn-outline-primary {
+            /* Changed to btn-outline-primary for better theme consistency */
+            background: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .btn-outline-primary:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-outline-secondary {
+            background: transparent;
+            border: 1px solid var(--text-muted);
+            color: var(--text-muted);
+        }
+        
+        .btn-outline-secondary:hover {
+            background: var(--text-muted);
+            color: white;
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            /* Softer radius */
+            padding: 1.5rem;
+            box-shadow: 0 3px 10px #0000000a;
+            /* Softer shadow */
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+            /* Subtle border */
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            /* Slightly smaller table font */
+        }
+        
+        th,
+        td {
+            padding: 0.9rem 1rem;
+            /* Adjusted padding */
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+            /* Lighter border within table */
+            vertical-align: middle;
+        }
+        
+        th {
+            font-weight: 600;
+            /* Bolder header */
+            color: var(--text-dark);
+            background-color: #f8f9fa;
+            /* Light header bg */
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+        
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .badge {
+            padding: 0.35em 0.75em;
+            /* Bootstrap 5 badge padding */
+            border-radius: 0.375rem;
+            /* Bootstrap 5 badge radius */
+            font-size: 0.8em;
+            /* Relative to parent for consistency */
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+        /* Using Bootstrap 5 background/text utility classes for badges for consistency if needed, or define custom: */
+        
+        .status-badge.bg-success {
+            background-color: var(--bs-success-bg-subtle) !important;
+            color: var(--bs-success-text-emphasis) !important;
+            border: 1px solid var(--bs-success-border-subtle) !important;
+        }
+        
+        .status-badge.bg-warning {
+            background-color: var(--bs-warning-bg-subtle) !important;
+            color: var(--bs-warning-text-emphasis) !important;
+            border: 1px solid var(--bs-warning-border-subtle) !important;
+        }
+        
+        .status-badge.bg-danger {
+            background-color: var(--bs-danger-bg-subtle) !important;
+            color: var(--bs-danger-text-emphasis) !important;
+            border: 1px solid var(--bs-danger-border-subtle) !important;
+        }
+        
+        .status-badge.bg-secondary {
+            background-color: var(--bs-secondary-bg-subtle) !important;
+            color: var(--bs-secondary-text-emphasis) !important;
+            border: 1px solid var(--bs-secondary-border-subtle) !important;
+        }
+        
+        .search-filter {
+            display: flex;
+            flex-wrap: wrap;
+            /* Allow wrapping on small screens */
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .search-filter .form-control,
+        .search-filter .form-select {
+            /* Target Bootstrap classes */
+            padding: 0.6rem 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            flex-grow: 1;
+            /* Allow elements to grow */
+        }
+        
+        .search-filter .form-select {
+            min-width: 200px;
+        }
+        /* Prevent select from becoming too small */
+        
+        .search-filter input[type="text"] {
+            min-width: 250px;
+        }
+        
+        .reservation-details-card-header {
+            /* Custom class for details card header */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .reservation-details-card-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0;
+        }
+        
+        .reservation-details {
+            background: #f8f9fa;
+            /* Lighter background for details block */
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin-top: 1rem;
+            border: 1px solid #e9ecef;
+        }
+        
+        .reservation-details p {
+            margin-bottom: 0.6rem;
+            font-size: 0.9rem;
+        }
+        
+        .reservation-details strong {
+            color: var(--text-dark);
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+        
+        .reservation-details-actions {
+            /* For buttons within the details card */
+            text-align: right;
+            /* Align buttons to the right */
+            margin-top: 1.5rem;
+        }
+        
+        .reservation-details-actions .btn+.btn {
+            margin-left: 0.5rem;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-start;
+            /* Default alignment */
+        }
+        
+        .action-buttons .btn {
+            padding: 0.35rem 0.75rem;
+            /* Smaller buttons for table actions */
+        }
+        /* Custom Alert Placeholder Style (if you replace JS alert() later) */
+        
+        .custom-alert {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid transparent;
+            border-radius: 0.375rem;
+        }
+        
+        .custom-alert-success {
+            color: #0f5132;
+            background-color: #d1e7dd;
+            border-color: #badbcc;
+        }
+        
+        .custom-alert-danger {
+            color: #842029;
+            background-color: #f8d7da;
+            border-color: #f5c2c7;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.5rem 1rem;
             }
-          }
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            .header-title {
+                font-size: 1.5rem;
+            }
+            .search-filter {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+            .search-filter .form-control,
+            .search-filter .form-select {
+                width: 100%;
+                min-width: unset;
+            }
+            .action-buttons {
+                flex-direction: row;
+                /* Keep as row, but they might wrap */
+                flex-wrap: wrap;
+            }
+            .action-buttons .btn {
+                width: auto;
+                margin-bottom: 0.5rem;
+                /* Add some bottom margin if they wrap */
+            }
+            table,
+            thead,
+            tbody,
+            th,
+            td,
+            tr {
+                display: block;
+            }
+            /* Force table to not be a table anymore */
+            thead tr {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+            /* Hide table headers */
+            tr {
+                border: 1px solid #ccc;
+                margin-bottom: 0.5rem;
+                border-radius: 8px;
+                background: var(--card-bg);
+            }
+            td {
+                border: none;
+                border-bottom: 1px solid #eee;
+                position: relative;
+                padding-left: 50%;
+                /* Create space for label */
+                white-space: normal;
+                text-align: right;
+                /* Align content to the right */
+            }
+            td:before {
+                /* Add data-* attribute for labels */
+                position: absolute;
+                top: 50%;
+                left: 10px;
+                transform: translateY(-50%);
+                width: 45%;
+                padding-right: 10px;
+                white-space: nowrap;
+                text-align: left;
+                /* Align label to the left */
+                font-weight: 600;
+                content: attr(data-label);
+            }
+            .reservation-details-actions {
+                text-align: center;
+            }
+            /* Center buttons on mobile in details card */
         }
-      });
-    }
-    
-    function setupEventListeners() {
-      // Sidebar toggle for mobile
-      document.getElementById('menuToggle').addEventListener('click', function() {
-        document.querySelector('.sidebar').classList.toggle('active');
-      });
-      
-      // Navigation between sections
-      document.querySelectorAll('.menu-item').forEach(item => {
-        item.addEventListener('click', function(e) {
-          e.preventDefault();
-          
-          // Remove active class from all menu items
-          document.querySelectorAll('.menu-item').forEach(i => {
-            i.classList.remove('active');
-          });
-          
-          // Add active class to clicked item
-          this.classList.add('active');
-          
-          // Hide all sections
-          document.querySelectorAll('.section-content').forEach(section => {
-            section.classList.add('d-none');
-          });
-          
-          // Show the selected section
-          const sectionId = this.getAttribute('data-section') + '-section';
-          document.getElementById(sectionId).classList.remove('d-none');
-          
-          // Close sidebar on mobile
-          if (window.innerWidth < 992) {
-            document.querySelector('.sidebar').classList.remove('active');
-          }
-        });
-      });
+        
+        @media (max-width: 480px) {
+            .action-buttons {
+                flex-direction: column;
+            }
+            .action-buttons .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
 
-      // Handle profile link in dropdown
-      document.querySelector('[data-section="profile"]').addEventListener('click', function(e) {
-        e.preventDefault();
-        
-        // Remove active class from all menu items
-        document.querySelectorAll('.menu-item').forEach(i => {
-          i.classList.remove('active');
-        });
-        
-        // Activate profile menu item
-        document.querySelector('[data-section="profile"]').classList.add('active');
-        
-        // Hide all sections
-        document.querySelectorAll('.section-content').forEach(section => {
-          section.classList.add('d-none');
-        });
-        
-        // Show profile section
-        document.getElementById('profile-section').classList.remove('d-none');
-        
-        // Close dropdown
-        const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('dropdownUser'));
-        dropdown.hide();
-      });
-      
-      // Logout function
-      document.getElementById('logoutBtn').addEventListener('click', function(e) {
-        e.preventDefault();
-        if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
-          // Here you would typically make an AJAX call to logout
-          window.location.href = '/logout'; // Change this to your logout route
-        }
-      });
-      
-      // View reservation details
-      document.querySelectorAll('.view-reservation').forEach(btn => {
-        btn.addEventListener('click', function() {
-          const row = this.closest('tr');
-          const reservationId = row.querySelector('td').textContent;
-          showReservationDetails(reservationId);
-        });
-      });
-      
-      // Process payment from reservations table
-      document.querySelectorAll('.process-payment:not(:disabled)').forEach(btn => {
-        btn.addEventListener('click', function() {
-          const row = this.closest('tr');
-          const reservationId = row.querySelector('td').textContent;
-          const reservation = reservations.find(r => r.id === reservationId);
-          
-          if (reservation) {
-            // Navigate to process payment section
-            document.querySelector('[data-section="process-payment"]').click();
-            
-            // Fill payment form
-            document.getElementById('paymentAmount').value = `${reservation.price} DA`;
-            
-            // Show reservation details
-            showReservationDetailsForPayment(reservation);
-          }
-        });
-      });
-      
-      // Payment method change
-      document.getElementById('paymentMethod').addEventListener('change', function() {
-        const creditCardFields = document.getElementById('creditCardFields');
-        if (this.value === 'credit_card') {
-          creditCardFields.classList.remove('d-none');
-        } else {
-          creditCardFields.classList.add('d-none');
-        }
-      });
-      
-      // Calculate change
-      document.getElementById('amountReceived').addEventListener('input', function() {
-        const amountToPay = parseFloat(document.getElementById('paymentAmount').value) || 0;
-        const amountReceived = parseFloat(this.value) || 0;
-        const change = amountReceived - amountToPay;
-        
-        document.getElementById('changeAmount').value = change >= 0 ? `${change.toFixed(2)} DA` : 'Montant insuffisant';
-      });
-      
-      // Payment form submission
-      document.getElementById('paymentForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const amountToPay = parseFloat(document.getElementById('paymentAmount').value) || 0;
-        const amountReceived = parseFloat(document.getElementById('amountReceived').value) || 0;
-        
-        if (amountReceived < amountToPay) {
-          alert('Le montant reçu est inférieur au montant à payer');
-          return;
-        }
-        
-        // Generate payment ID
-        const paymentId = 'PAY-' + Math.floor(100000 + Math.random() * 900000);
-        
-        // Create payment receipt
-        const paymentReceipt = {
-          id: paymentId,
-          date: new Date().toLocaleString(),
-          amount: amountToPay,
-          method: document.getElementById('paymentMethod').value,
-          cashier: 'Caissier'
-        };
-        
-        // Show payment receipt
-        showPaymentReceipt(paymentReceipt);
-        
-        // In a real app, you would send this to the backend
-        fetch('/api/payments', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(paymentReceipt)
-        })
-        .then(response => response.json())
-        .then(data => {
-          console.log('Payment processed:', data);
-        })
-        .catch(error => {
-          console.error('Error:', error);
-        });
-      });
-      
-      // Search reservation form submission
-      document.getElementById('searchReservationForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const reference = document.getElementById('reservationReference').value;
-        const clientName = document.getElementById('clientName').value;
-        
-        // In a real app, you would search reservations from the backend
-        const foundReservation = reservations.find(r => 
-          r.id === reference || r.client.toLowerCase().includes(clientName.toLowerCase())
-        );
-        
-        if (foundReservation) {
-          showReservationDetailsForPayment(foundReservation);
-          document.getElementById('paymentAmount').value = `${foundReservation.price} DA`;
-        } else {
-          alert('Aucune réservation trouvée');
-        }
-      });
-      
-      // Print receipt button
-      document.getElementById('printReceiptBtn').addEventListener('click', function() {
-        window.print();
-      });
-    }
-    
-    function showReservationDetails(reservationId) {
-      const reservation = reservations.find(r => r.id === reservationId);
-      if (!reservation) return;
-      
-      const modalContent = document.getElementById('modalReservationDetails');
-      
-      const dateObj = new Date(reservation.date);
-      const formattedDate = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
-      
-      const paymentStatus = reservation.paymentStatus === 'paid' ? 
-        '<span class="badge bg-success">Payé</span>' : 
-        '<span class="badge bg-danger">Non payé</span>';
-      
-      modalContent.innerHTML = `
-        <div class="row">
-          <div class="col-md-6">
-            <h5>Détails du client</h5>
-            <div class="mb-3">
-              <strong>Nom:</strong> ${reservation.client}
+<body>
+    <div class="container">
+        <header>
+            <h1 class="header-title">Reservation Approval</h1>
+            <div class="user-info" id="userInfo" title="User Account">
+                <div class="user-avatar">CA</div>
+                <div class="user-name">Cashier</div>
+                <i class="bi bi-caret-down-fill" style="font-size: 0.8rem;"></i>
+                <div class="user-dropdown" id="userDropdown">
+                    <div class="user-dropdown-header">
+                        <strong>Cashier Name</strong>
+                        <div>cashier@example.com</div>
+                    </div>
+                    <a href="#" class="logout-btn" id="logoutBtn">
+                        <i class="bi bi-box-arrow-left"></i> Logout
+                    </a>
+                </div>
             </div>
-            <div class="mb-3">
-              <strong>Référence:</strong> ${reservation.id}
-            </div>
-            <div class="mb-3">
-              <strong>Statut paiement:</strong> ${paymentStatus}
-            </div>
-          </div>
-          <div class="col-md-6">
-            <h5>Détails du trajet</h5>
-            <div class="mb-3">
-              <strong>Trajet:</strong> ${reservation.departure} → ${reservation.arrival}
-            </div>
-            <div class="mb-3">
-              <strong>Date:</strong> ${formattedDate} à ${reservation.time}
-            </div>
-            <div class="mb-3">
-              <strong>Siège:</strong> ${reservation.seat}
-            </div>
-          </div>
+        </header>
+
+        <div class="search-filter card">
+            <!-- Wrapped search in a card for better grouping -->
+            <select id="filterStatus" class="form-select">
+        <option value="all">All Reservations</option>
+        <option value="pending" selected>Pending Approval</option>
+        <option value="approved">Approved</option>
+        <option value="rejected">Rejected</option>
+      </select>
+            <input type="text" id="searchReservations" class="form-control" placeholder="Search by ID, Name, Trip...">
         </div>
-        <div class="row mt-3">
-          <div class="col-md-6">
-            <h5>Informations véhicule</h5>
-            <div class="mb-3">
-              <strong>Véhicule:</strong> ${reservation.vehicle}
-            </div>
-            <div class="mb-3">
-              <strong>Chauffeur:</strong> ${reservation.driver}
-            </div>
-          </div>
-          <div class="col-md-6">
-            <h5>Informations financières</h5>
-            <div class="mb-3">
-              <strong>Prix:</strong> ${reservation.price} DA
-            </div>
-            <div class="mb-3">
-              <strong>Statut:</strong> ${reservation.status === 'confirmed' ? 'Confirmé' : 
-                                       reservation.status === 'pending' ? 'En attente' : 
-                                       reservation.status === 'completed' ? 'Complété' : 'Inconnu'}
-            </div>
-          </div>
+
+        <div class="card table-responsive-md">
+            <!-- Added table-responsive-md for better small screen handling before full collapse -->
+            <table id="reservationsTable">
+                <thead>
+                    <tr>
+                        <th>Res. ID</th>
+                        <th>Customer</th>
+                        <th>Trip Details</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th class="text-center">Actions</th>
+                        <!-- Centered actions header -->
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Reservations will be loaded here -->
+                    <!-- Example of how td should be structured for mobile labels:
+            <tr>
+                <td data-label="Res. ID">101</td>
+                <td data-label="Customer">John Doe</td>
+                <td data-label="Trip Details">City A to City B<br><small>10:00 AM</small></td>
+                <td data-label="Date">2023-10-26</td>
+                <td data-label="Status"><span class="badge status-badge bg-warning">Pending</span></td>
+                <td data-label="Actions" class="text-center">
+                    <div class="action-buttons justify-content-center">
+                        <button class="btn btn-sm btn-success approve-btn" data-id="101"><i class="bi bi-check-circle"></i> Approve</button>
+                        <button class="btn btn-sm btn-danger reject-btn" data-id="101"><i class="bi bi-x-circle"></i> Reject</button>
+                    </div>
+                </td>
+            </tr>
+           -->
+                </tbody>
+            </table>
         </div>
+
+        <!-- Reservation Details Card (hidden by default) -->
+        <div class="card" id="reservationDetailsCard" style="display: none;">
+            <div class="reservation-details-card-header">
+                <h2>Reservation Details</h2>
+                <button class="btn btn-sm btn-outline-secondary" id="closeDetailsBtn" title="Close Details">
+          <i class="bi bi-x-lg"></i> Close
+        </button>
+            </div>
+
+            <div id="reservationDetailsContent">
+                <!-- Details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let reservations = []; // Assume this gets populated from API
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Mock user info population
+            const userInfoDiv = document.querySelector('#userDropdown div:first-child');
+            const userEmailDiv = document.querySelector('#userDropdown div:nth-child(2)');
+            // In a real app, fetch this or get from a global user object
+            // userInfoDiv.innerHTML = `<strong>Cashier Test</strong>`; 
+            // userEmailDiv.textContent = `cashier.test@example.com`;
+
+            try {
+                const res = await fetch('/api/payments/reservations', { // Make sure this endpoint is correct
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                reservations = await res.json();
+                loadReservations('pending'); // Load pending by default
+            } catch (error) {
+                // Use a more user-friendly way to show errors if possible, instead of alert()
+                console.error('Failed to load reservations:', error);
+                const tbody = document.querySelector('#reservationsTable tbody');
+                if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Failed to load reservations from server. Please try again later.</td></tr>`;
+                // You could show a toast notification here too.
+            }
+        });
+
+        function loadReservations(filter = 'pending') {
+            const tbody = document.querySelector('#reservationsTable tbody');
+            tbody.innerHTML = ''; // Clear existing rows
+
+            const searchTerm = document.getElementById('searchReservations').value.toLowerCase();
+
+            const filteredReservations = reservations.filter(r => {
+                const matchesFilter = filter === 'all' ||
+                    (filter === 'pending' && r.statutPaiement === 'unpaid') ||
+                    (filter === 'approved' && r.statutPaiement === 'paid') ||
+                    (filter === 'rejected' && r.statutPaiement === 'rejected');
+
+                const matchesSearch = !searchTerm ||
+                    r.idReservation.toString().includes(searchTerm) ||
+                    (r.passagerNom && r.passagerNom.toLowerCase().includes(searchTerm)) ||
+                    (r.passagerPrenom && r.passagerPrenom.toLowerCase().includes(searchTerm)) ||
+                    (r.depart && r.depart.toLowerCase().includes(searchTerm)) ||
+                    (r.destination && r.destination.toLowerCase().includes(searchTerm));
+
+                return matchesFilter && matchesSearch;
+            });
+
+            if (filteredReservations.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted p-4">No reservations found matching your criteria.</td></tr>`;
+                return;
+            }
+
+            filteredReservations.forEach(reservation => {
+                const row = document.createElement('tr');
+                let statusBadgeClass = 'secondary';
+                let statusText = reservation.statutPaiement;
+
+                if (reservation.statutPaiement === 'paid') {
+                    statusBadgeClass = 'success';
+                    statusText = 'Approved';
+                } else if (reservation.statutPaiement === 'unpaid') {
+                    statusBadgeClass = 'warning';
+                    statusText = 'Pending';
+                } else if (reservation.statutPaiement === 'rejected') {
+                    statusBadgeClass = 'danger';
+                    statusText = 'Rejected';
+                }
+
+                let actionBtns = reservation.statutPaiement === 'unpaid' ? `
+            <div class="action-buttons justify-content-center">
+                <button class="btn btn-sm btn-success approve-btn" data-id="${reservation.idReservation}" title="Approve Payment">
+                <i class="bi bi-check-circle-fill"></i> Approve
+                </button>
+                <button class="btn btn-sm btn-danger reject-btn" data-id="${reservation.idReservation}" title="Reject Payment">
+                <i class="bi bi-x-circle-fill"></i> Reject
+                </button>
+            </div>` : `
+            <button class="btn btn-sm btn-outline-primary view-btn" data-id="${reservation.idReservation}" title="View Details">
+                <i class="bi bi-eye-fill"></i> View
+            </button>`;
+
+                // Added data-label attributes for mobile view
+                row.innerHTML = `
+            <td data-label="Res. ID">${reservation.idReservation}</td>
+            <td data-label="Customer">${reservation.passagerNom || 'N/A'} ${reservation.passagerPrenom || ''}</td>
+            <td data-label="Trip Details">${reservation.depart  || 'N/A'} to ${reservation.destination || 'N/A'}<br><small class="text-muted">${reservation.heureDepart || 'N/A'}</small></td>
+            <td data-label="Date">${reservation.dateReservation ? new Date(reservation.dateReservation).toLocaleDateString() : 'N/A'}</td>
+            <td data-label="Status"><span class="badge status-badge bg-${statusBadgeClass}">${statusText}</span></td>
+            <td data-label="Actions" class="text-center">${actionBtns}</td>
+        `;
+                tbody.appendChild(row);
+            });
+
+            attachActionHandlers(); // Re-attach handlers after loading
+        }
+
+        function attachActionHandlers() {
+            document.querySelectorAll('.approve-btn').forEach(btn => {
+                const newBtn = btn.cloneNode(true); // Clone to remove old listeners
+                btn.parentNode.replaceChild(newBtn, btn);
+                newBtn.addEventListener('click', function() {
+                    approveReservation(this.getAttribute('data-id'));
+                });
+            });
+            document.querySelectorAll('.reject-btn').forEach(btn => {
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                newBtn.addEventListener('click', function() {
+                    rejectReservation(this.getAttribute('data-id'));
+                });
+            });
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                newBtn.addEventListener('click', function() {
+                    showReservationDetails(this.getAttribute('data-id'));
+                });
+            });
+        }
+
+        async function updateReservationStatus(reservationId, status) {
+            // Helper function to optimistically update UI and then fetch new data
+            const reservation = reservations.find(r => r.idReservation == reservationId);
+            if (reservation) reservation.statutPaiement = status; // Optimistic update
+            loadReservations(document.getElementById('filterStatus').value); // Reload table with current filter
+
+            try {
+                const res = await fetch('/api/payments/reservations', { // Fetch fresh list
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                if (!res.ok) throw new Error("Failed to refresh reservations list.");
+                reservations = await res.json();
+                loadReservations(document.getElementById('filterStatus').value); // Final reload with server data
+            } catch (err) {
+                console.error("Error refreshing reservations:", err);
+                // Potentially revert optimistic update or show error
+            }
+        }
+
+        async function approveReservation(reservationId) {
+            try {
+                await fetch(`/api/payments/${reservationId}/paid`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                // Using JS alert for now, replace with custom notification
+                alert(`✅ Reservation ${reservationId} marked as paid`);
+                updateReservationStatus(reservationId, 'paid');
+            } catch (err) {
+                alert('❌ Failed to approve reservation');
+                console.error(err);
+            }
+        }
+
+        async function rejectReservation(reservationId) {
+            const reservation = reservations.find(r => r.idReservation == reservationId);
+            if (reservation) {
+                if (confirm(`Are you sure you want to reject reservation ${reservationId}?`)) {
+                    try {
+                        await fetch(`/api/payments/${reservationId}/reject`, {
+                            method: 'PUT',
+                            headers: {
+                                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            }
+                        });
+                        alert(`❌ Reservation ${reservationId} rejected successfully`);
+                        updateReservationStatus(reservationId, 'rejected');
+                    } catch (error) {
+                        alert('❌ Failed to reject reservation');
+                        console.error(error);
+                    }
+                }
+            }
+        }
+
+        function showReservationDetails(reservationId) {
+            const reservation = reservations.find(r => r.idReservation == reservationId);
+            const detailsCard = document.getElementById('reservationDetailsCard');
+            const detailsContent = document.getElementById('reservationDetailsContent');
+
+            if (reservation && detailsCard && detailsContent) {
+                let statusText = reservation.statutPaiement;
+                if (reservation.statutPaiement === 'paid') statusText = 'Approved';
+                else if (reservation.statutPaiement === 'unpaid') statusText = 'Pending';
+                else if (reservation.statutPaiement === 'rejected') statusText = 'Rejected';
+
+                detailsContent.innerHTML = `
+        <div class="reservation-details">
+          <p><strong>Reservation ID:</strong> ${reservation.idReservation}</p>
+          <p><strong>Passenger:</strong> ${reservation.passagerNom || 'N/A'} ${reservation.passagerPrenom || ''}</p>
+          <p><strong>Trip:</strong> ${reservation.depart || 'N/A'} → ${reservation.destination || 'N/A'}</p>
+          <p><strong>Departure Time:</strong> ${reservation.heureDepart || 'N/A'}</p>
+          <p><strong>Reservation Date:</strong> ${reservation.dateReservation ? new Date(reservation.dateReservation).toLocaleDateString() : 'N/A'}</p>
+          <p><strong>Seats:</strong> ${reservation.nbrPlaces || 1}</p>
+          <p><strong>Payment Status:</strong> ${statusText}</p>
+        </div>
+        ${reservation.statutPaiement === 'unpaid' ? `
+        <div class="reservation-details-actions">
+            <button class="btn btn-success approve-btn-modal" data-id="${reservation.idReservation}" title="Approve Payment">
+              <i class="bi bi-check-circle-fill"></i> Approve
+            </button>
+            <button class="btn btn-danger reject-btn-modal" data-id="${reservation.idReservation}" title="Reject Payment">
+              <i class="bi bi-x-circle-fill"></i> Reject
+            </button>
+        </div>` : ''}
       `;
-      
-      const modal = new bootstrap.Modal(document.getElementById('reservationDetailsModal'));
-      modal.show();
+
+      detailsCard.style.display = 'block';
+      // Scroll to the details card if it's out of view
+      detailsCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); 
+
+      // Re-attach handlers for buttons inside modal/details card
+      const approveBtnModal = detailsContent.querySelector('.approve-btn-modal');
+      if (approveBtnModal) {
+        approveBtnModal.addEventListener('click', function () {
+          approveReservation(this.getAttribute('data-id'));
+          detailsCard.style.display = 'none';
+        });
+      }
+      const rejectBtnModal = detailsContent.querySelector('.reject-btn-modal');
+      if (rejectBtnModal) {
+        rejectBtnModal.addEventListener('click', function () {
+          rejectReservation(this.getAttribute('data-id'));
+          detailsCard.style.display = 'none';
+        });
+      }
     }
-    
-    function showReservationDetailsForPayment(reservation) {
-      const reservationDetailsCard = document.getElementById('reservationDetailsCard');
-      const reservationDetailsContent = document.getElementById('reservationDetailsContent');
-      
-      const dateObj = new Date(reservation.date);
-      const formattedDate = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
-      
-      reservationDetailsContent.innerHTML = `
-        <div class="mb-3">
-          <strong>Référence:</strong> ${reservation.id}
-        </div>
-        <div class="mb-3">
-          <strong>Client:</strong> ${reservation.client}
-        </div>
-        <div class="mb-3">
-          <strong>Trajet:</strong> ${reservation.departure} → ${reservation.arrival}
-        </div>
-        <div class="mb-3">
-          <strong>Date:</strong> ${formattedDate} à ${reservation.time}
-        </div>
-        <div class="mb-3">
-          <strong>Siège:</strong> ${reservation.seat}
-        </div>
-        <div class="mb-3">
-          <strong>Prix:</strong> ${reservation.price} DA
-        </div>
-      `;
-      
-      reservationDetailsCard.classList.remove('d-none');
+  }
+
+  document.getElementById('closeDetailsBtn').addEventListener('click', function () {
+    document.getElementById('reservationDetailsCard').style.display = 'none';
+  });
+
+  document.getElementById('filterStatus').addEventListener('change', function () {
+    loadReservations(this.value);
+  });
+
+  document.getElementById('searchReservations').addEventListener('input', function () {
+    // Debounce search for better performance if needed, for now direct filtering
+    loadReservations(document.getElementById('filterStatus').value);
+  });
+
+  // User dropdown toggle
+  const userInfoEl = document.getElementById('userInfo');
+  const userDropdownEl = document.getElementById('userDropdown');
+  if (userInfoEl && userDropdownEl) {
+      userInfoEl.addEventListener('click', function (e) {
+        e.stopPropagation(); // Prevent click from bubbling to document
+        userDropdownEl.classList.toggle('active');
+      });
+  }
+  // Close dropdown if clicked outside
+  document.addEventListener('click', function (e) {
+    if (userDropdownEl && userDropdownEl.classList.contains('active') && !userInfoEl.contains(e.target)) {
+      userDropdownEl.classList.remove('active');
     }
-    
-    function showPaymentReceipt(payment) {
-      const paymentReceiptContent = document.getElementById('paymentReceiptContent');
-      
-      paymentReceiptContent.innerHTML = `
-        <div class="text-center mb-4">
-          <h4>VoyagePlus</h4>
-          <p class="text-muted">Reçu de paiement</p>
-        </div>
-        
-        <div class="d-flex justify-content-between mb-2">
-          <span class="text-muted">Numéro de reçu:</span>
-          <span>${payment.id}</span>
-        </div>
-        <div class="d-flex justify-content-between mb-2">
-          <span class="text-muted">Date:</span>
-          <span>${payment.date}</span>
-        </div>
-        <div class="d-flex justify-content-between mb-2">
-          <span class="text-muted">Caissier:</span>
-          <span>${payment.cashier}</span>
-        </div>
-        
-        <hr>
-        
-        <div class="d-flex justify-content-between mb-2">
-          <span class="text-muted">Montant:</span>
-          <span>${payment.amount} DA</span>
-        </div>
-        <div class="d-flex justify-content-between mb-3">
-          <span class="text-muted">Méthode de paiement:</span>
-          <span>${payment.method === 'credit_card' ? 'Carte de crédit' : 
-                 payment.method === 'cash' ? 'Espèces' : 
-                 payment.method === 'bank_transfer' ? 'Virement bancaire' : 
-                 payment.method === 'check' ? 'Chèque' : 'Autre'}</span>
-        </div>
-        
-        <hr>
-        
-        <div class="text-center mt-4">
-          <p class="text-muted">Merci pour votre confiance!</p>
-        </div>
-      `;
-      
-      const modal = new bootstrap.Modal(document.getElementById('paymentReceiptModal'));
-      modal.show();
-    }
-  </script>
+  });
+
+  // Logout
+  const logoutBtnEl = document.getElementById('logoutBtn');
+  if (logoutBtnEl) {
+      logoutBtnEl.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (confirm('Are you sure you want to logout?')) {
+          localStorage.removeItem('token');
+          window.location.href = 'login'; // Adjust to your login page
+        }
+      });
+  }
+    </script>
+
 </body>
+
 </html>

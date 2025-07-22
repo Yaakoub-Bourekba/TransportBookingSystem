@@ -5,7 +5,10 @@ import {
     createTrajet,
     updateTrajetById,
     deleteTrajetById,
-    searchTrajets
+    searchTrajets,
+    getAllMainTripsForUser,
+    getTripById
+  
   } from '../models/trajet.model.js';
   
   // 🚚 GET /api/trajets/assigned
@@ -20,13 +23,34 @@ import {
   // Get /api/trajest/search
   export const getAllTrips = async (req, res) => {
   try {
-    const {from,to,date,time}=req.body
-    const data = await getAllTripsForUser(from,to,date,time);
-      res.json(data);
+    const { depart: from, destination: to } = req.body;
+const data = await getAllTripsForUser(from, to);
+    res.json(data);
   } catch (error) {
-    res.json({error:error.message});
+    res.status(500).json({ error: error.message });
   }
-  };
+};
+  export const getTripsById = async (req, res) => {
+    const id = req.params.id;
+  try {
+const data = await getTripById(id);
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+  export const getAllMainTrips = async (req, res) => {
+  try {
+    
+const data = await getAllMainTripsForUser();
+    console.log(data);
+    
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
   
   // 🟢 PUT /api/trajets/:id/status
   export const updateTripStatus = async (req, res) => {
@@ -43,10 +67,10 @@ import {
   
   // ➕ POST /api/trajets
   export const addTrip = async (req, res) => {
-    const { depart, destination, heureDepart, idChauffeur, idMoyen, idService } = req.body;
-  
+    const { lieuDepart, lieuArrivee } = req.body;
+      
     try {
-      const result = await createTrajet(depart, destination, heureDepart, idChauffeur, idMoyen, idService);
+      const result = await createTrajet(lieuDepart, lieuArrivee);
       res.status(201).json({ message: 'Trip created', id: result.insertId });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -55,12 +79,12 @@ import {
   
   // ✏️ PUT /api/trajets/:id
   export const updateTrip = async (req, res) => {
-    const { depart, destination, heureDepart } = req.body;
+    const { depart, destination } = req.body;
     const { id } = req.params;
   
     try {
-      await updateTrajetById(id, depart, destination, heureDepart);
-      res.json({ message: 'Trip updated' });
+      await updateTrajetById(id, depart, destination);
+      res.redirect('/admin');
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

@@ -1,16 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transport Service - Passenger Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+
     <style>
-        :root {
+         :root {
             --primary: #3498db;
             --secondary: #2980b9;
-            --dark: #2c3e50;
+            --dark: #1e2387;
             --light: #ecf0f1;
             --success: #2ecc71;
             --warning: #f39c12;
@@ -88,7 +96,8 @@
             font-size: 1.1rem;
         }
         
-        .nav-link:hover, .nav-link.active {
+        .nav-link:hover,
+        .nav-link.active {
             background-color: var(--primary);
             color: white;
             text-decoration: none;
@@ -159,7 +168,8 @@
             border-collapse: collapse;
         }
         
-        th, td {
+        th,
+        td {
             padding: 12px 15px;
             text-align: left;
             border-bottom: 1px solid #eee;
@@ -183,18 +193,27 @@
         }
         
         .badge-success {
+            /* For 'paid' or 'confirmed' */
             background-color: #d4edda;
+            /* Bootstrap success background */
             color: #155724;
+            /* Bootstrap success color */
         }
         
         .badge-warning {
+            /* For 'pending' payment or 'pending' reservation */
             background-color: #fff3cd;
+            /* Bootstrap warning background */
             color: #856404;
+            /* Bootstrap warning color */
         }
         
         .badge-danger {
+            /* For 'unpaid', 'cancelled' */
             background-color: #f8d7da;
+            /* Bootstrap danger background */
             color: #721c24;
+            /* Bootstrap danger color */
         }
         
         .btn-sm {
@@ -209,24 +228,62 @@
         .content-section.active {
             display: block;
         }
+        /* For animated pending dots */
         
+        .pending-dots::after {
+            display: inline-block;
+            animation: PENDING_DOTS 1.4s infinite;
+            content: '.';
+            /* Start with one dot */
+            width: 1em;
+            /* Allocate space for 3 dots */
+            text-align: left;
+        }
+        
+        @keyframes PENDING_DOTS {
+            0% {
+                content: '.';
+            }
+            33% {
+                content: '..';
+            }
+            66% {
+                content: '...';
+            }
+            100% {
+                content: '.';
+            }
+        }
+        
+        #trip-map-container {
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            min-height: 400px;
+            /* Ensure it has a minimum height */
+        }
+        
+        .leaflet-routing-container {
+            /* Make instruction box smaller if needed */
+            max-height: 200px;
+            overflow-y: auto;
+        }
         /* Responsive */
+        
         @media (max-width: 768px) {
             .dashboard {
                 flex-direction: column;
             }
-            
             .sidebar {
                 width: 100%;
                 height: auto;
             }
-            
             .stats {
                 grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="dashboard">
         <!-- Sidebar -->
@@ -235,12 +292,12 @@
                 <h3>Transport Service</h3>
                 <p>Passenger Dashboard</p>
             </div>
-            
+
             <div class="user-info">
                 <div class="avatar" id="user-avatar">JD</div>
                 <span id="user-name">John Doe</span>
             </div>
-            
+
             <ul class="nav">
                 <li class="nav-item">
                     <a href="#" class="nav-link active" data-section="dashboard">
@@ -269,7 +326,7 @@
                 </li>
             </ul>
         </div>
-        
+
         <!-- Main Content -->
         <div class="main-content">
             <!-- Dashboard Section -->
@@ -278,7 +335,7 @@
                     <h1>Dashboard</h1>
                     <div class="date-time" id="current-date"></div>
                 </header>
-                
+
                 <div class="stats">
                     <div class="stat-card">
                         <i class="bi bi-journal-check"></i>
@@ -296,7 +353,7 @@
                         <p>Upcoming Trips</p>
                     </div>
                 </div>
-                
+
                 <div class="recent-reservations">
                     <h2>Recent Reservations</h2>
                     <div class="table-container">
@@ -318,7 +375,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Reservations Section -->
             <div class="content-section" id="reservations-section">
                 <header>
@@ -327,7 +384,7 @@
                         <i class="bi bi-plus"></i> New Reservation
                     </button>
                 </header>
-                
+
                 <div class="table-container">
                     <table id="all-reservations-table">
                         <thead>
@@ -349,13 +406,12 @@
                     </table>
                 </div>
             </div>
-            
+
             <!-- Trips Section -->
             <div class="content-section" id="trips-section">
                 <header>
                     <h1>Book a Trip</h1>
                 </header>
-                
                 <div class="card mb-4">
                     <div class="card-body">
                         <h5 class="card-title">Search for Trips</h5>
@@ -365,19 +421,133 @@
                                     <label for="departure" class="form-label">From</label>
                                     <select class="form-select" id="departure" required>
                                         <option value="">Select departure</option>
-                                        <!-- Filled by JavaScript -->
+                                        <option value="Adrar">Adrar</option>
+                                        <option value="Chlef">Chlef</option>
+                                        <option value="Laghouat">Laghouat</option>
+                                        <option value="Oum El Bouaghi">Oum El Bouaghi</option>
+                                        <option value="Batna">Batna</option>
+                                        <option value="Béjaïa">Béjaïa</option>
+                                        <option value="Biskra">Biskra</option>
+                                        <option value="Béchar">Béchar</option>
+                                        <option value="Blida">Blida</option>
+                                        <option value="Bouira">Bouira</option>
+                                        <option value="Tamanrasset">Tamanrasset</option>
+                                        <option value="Tébessa">Tébessa</option>
+                                        <option value="Tlemcen">Tlemcen</option>
+                                        <option value="Tiaret">Tiaret</option>
+                                        <option value="Tizi Ouzou">Tizi Ouzou</option>
+                                        <option value="Alger">Alger</option>
+                                        <option value="Djelfa">Djelfa</option>
+                                        <option value="Jijel">Jijel</option>
+                                        <option value="Sétif">Sétif</option>
+                                        <option value="Saïda">Saïda</option>
+                                        <option value="Skikda">Skikda</option>
+                                        <option value="Sidi Bel Abbès">Sidi Bel Abbès</option>
+                                        <option value="Annaba">Annaba</option>
+                                        <option value="Guelma">Guelma</option>
+                                        <option value="Constantine">Constantine</option>
+                                        <option value="Médéa">Médéa</option>
+                                        <option value="Mostaganem">Mostaganem</option>
+                                        <option value="MSila">M'Sila</option>
+                                        <option value="Mascara">Mascara</option>
+                                        <option value="Ouargla">Ouargla</option>
+                                        <option value="Oran">Oran</option>
+                                        <option value="El Bayadh">El Bayadh</option>
+                                        <option value="Illizi">Illizi</option>
+                                        <option value="Bordj Bou Arréridj">Bordj Bou Arréridj</option>
+                                        <option value="Boumerdès">Boumerdès</option>
+                                        <option value="El Tarf">El Tarf</option>
+                                        <option value="Tindouf">Tindouf</option>
+                                        <option value="Tissemsilt">Tissemsilt</option>
+                                        <option value="El Oued">El Oued</option>
+                                        <option value="Khenchela">Khenchela</option>
+                                        <option value="Souk Ahras">Souk Ahras</option>
+                                        <option value="Tipaza">Tipaza</option>
+                                        <option value="Mila">Mila</option>
+                                        <option value="Aïn Defla">Aïn Defla</option>
+                                        <option value="Naâma">Naâma</option>
+                                        <option value="Aïn Témouchent">Aïn Témouchent</option>
+                                        <option value="Ghardaïa">Ghardaïa</option>
+                                        <option value="Relizane">Relizane</option>
+                                        <option value="Timimoun">Timimoun</option>
+                                        <option value="Bordj Badji Mokhtar">Bordj Badji Mokhtar</option>
+                                        <option value="Ouled Djellal">Ouled Djellal</option>
+                                        <option value="Béni Abbès">Béni Abbès</option>
+                                        <option value="In Salah">In Salah</option>
+                                        <option value="In Guezzam">In Guezzam</option>
+                                        <option value="Touggourt">Touggourt</option>
+                                        <option value="Djanet">Djanet</option>
+                                        <option value="El M'Ghair">El M'Ghair</option>
+                                        <option value="El Menia">El Menia</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4">
                                     <label for="destination" class="form-label">To</label>
                                     <select class="form-select" id="destination" required>
                                         <option value="">Select destination</option>
-                                        <!-- Filled by JavaScript -->
+                                        <option value="Adrar">Adrar</option>
+                                        <option value="Chlef">Chlef</option>
+                                        <option value="Laghouat">Laghouat</option>
+                                        <option value="Oum El Bouaghi">Oum El Bouaghi</option>
+                                        <option value="Batna">Batna</option>
+                                        <option value="Béjaïa">Béjaïa</option>
+                                        <option value="Biskra">Biskra</option>
+                                        <option value="Béchar">Béchar</option>
+                                        <option value="Blida">Blida</option>
+                                        <option value="Bouira">Bouira</option>
+                                        <option value="Tamanrasset">Tamanrasset</option>
+                                        <option value="Tébessa">Tébessa</option>
+                                        <option value="Tlemcen">Tlemcen</option>
+                                        <option value="Tiaret">Tiaret</option>
+                                        <option value="Tizi Ouzou">Tizi Ouzou</option>
+                                        <option value="Alger">Alger</option>
+                                        <option value="Djelfa">Djelfa</option>
+                                        <option value="Jijel">Jijel</option>
+                                        <option value="Sétif">Sétif</option>
+                                        <option value="Saïda">Saïda</option>
+                                        <option value="Skikda">Skikda</option>
+                                        <option value="Sidi Bel Abbès">Sidi Bel Abbès</option>
+                                        <option value="Annaba">Annaba</option>
+                                        <option value="Guelma">Guelma</option>
+                                        <option value="Constantine">Constantine</option>
+                                        <option value="Médéa">Médéa</option>
+                                        <option value="Mostaganem">Mostaganem</option>
+                                        <option value="MSila">M'Sila</option>
+                                        <option value="Mascara">Mascara</option>
+                                        <option value="Ouargla">Ouargla</option>
+                                        <option value="Oran">Oran</option>
+                                        <option value="El Bayadh">El Bayadh</option>
+                                        <option value="Illizi">Illizi</option>
+                                        <option value="Bordj Bou Arréridj">Bordj Bou Arréridj</option>
+                                        <option value="Boumerdès">Boumerdès</option>
+                                        <option value="El Tarf">El Tarf</option>
+                                        <option value="Tindouf">Tindouf</option>
+                                        <option value="Tissemsilt">Tissemsilt</option>
+                                        <option value="El Oued">El Oued</option>
+                                        <option value="Khenchela">Khenchela</option>
+                                        <option value="Souk Ahras">Souk Ahras</option>
+                                        <option value="Tipaza">Tipaza</option>
+                                        <option value="Mila">Mila</option>
+                                        <option value="Aïn Defla">Aïn Defla</option>
+                                        <option value="Naâma">Naâma</option>
+                                        <option value="Aïn Témouchent">Aïn Témouchent</option>
+                                        <option value="Ghardaïa">Ghardaïa</option>
+                                        <option value="Relizane">Relizane</option>
+                                        <option value="Timimoun">Timimoun</option>
+                                        <option value="Bordj Badji Mokhtar">Bordj Badji Mokhtar</option>
+                                        <option value="Ouled Djellal">Ouled Djellal</option>
+                                        <option value="Béni Abbès">Béni Abbès</option>
+                                        <option value="In Salah">In Salah</option>
+                                        <option value="In Guezzam">In Guezzam</option>
+                                        <option value="Touggourt">Touggourt</option>
+                                        <option value="Djanet">Djanet</option>
+                                        <option value="El M'Ghair">El M'Ghair</option>
+                                        <option value="El Menia">El Menia</option>
                                     </select>
                                 </div>
-                                <div class="col-md-3">
-                                    <label for="travel-date" class="form-label">Date</label>
-                                    <input type="date" class="form-control" id="travel-date" required>
+                                <div class="mb-3">
+                                    <label for="travel-date" class="form-label">Date:</label>
+                                    <input type="date" id="travel-date" class="form-control" value="2025-05-21" required>
                                 </div>
                                 <div class="col-md-1 d-flex align-items-end">
                                     <button type="submit" class="btn btn-primary">
@@ -388,18 +558,21 @@
                         </form>
                     </div>
                 </div>
-                
                 <div id="available-trips-container">
                     <!-- Filled by JavaScript when searching -->
                 </div>
+                <div id="trip-map-container" style="height: 400px; margin-top: 20px; display: none;">
+                    <!-- Leaflet map will be initialized here -->
+                </div>
             </div>
-            
+            <!-- End of trips-section -->
+
             <!-- Profile Section -->
             <div class="content-section" id="profile-section">
                 <header>
                     <h1>My Profile</h1>
                 </header>
-                
+
                 <div class="row">
                     <div class="col-md-4">
                         <div class="card">
@@ -413,7 +586,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="col-md-8">
                         <div class="card">
                             <div class="card-body">
@@ -437,383 +610,612 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- Change Password Modal -->
-                <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Change Password</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <form id="change-password-form">
-                                    <div class="mb-3">
-                                        <label for="current-password" class="form-label">Current Password</label>
-                                        <input type="password" class="form-control" id="current-password" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="new-password" class="form-label">New Password</label>
-                                        <input type="password" class="form-control" id="new-password" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="confirm-password" class="form-label">Confirm New Password</label>
-                                        <input type="password" class="form-control" id="confirm-password" required>
-                                    </div>
-                                    <div class="d-grid">
-                                        <button type="submit" class="btn btn-primary">Change Password</button>
-                                    </div>
-                                </form>
-                            </div>
+            </div>
+            <!-- End of profile-section -->
+        </div>
+        <!-- End of main-content -->
+    </div>
+    <!-- End of dashboard -->
+
+    <!-- Change Password Modal -->
+    <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="change-password-form">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="changePasswordModalLabel">Change Password</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="current-password" class="form-label">Current Password</label>
+                            <input type="password" class="form-control" id="current-password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="new-password" class="form-label">New Password</label>
+                            <input type="password" class="form-control" id="new-password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirm-password" class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control" id="confirm-password" required>
                         </div>
                     </div>
-                </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Change Password</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
-<!-- At the end of profile section or near end of body -->
-<!-- Change Password Modal -->
-<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <form id="change-password-form">
-        <div class="modal-header">
-          <h5 class="modal-title" id="changePasswordModalLabel">Change Password</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="mb-3">
-            <label for="current-password" class="form-label">Current Password</label>
-            <input type="password" class="form-control" id="current-password" required>
-          </div>
-          <div class="mb-3">
-            <label for="new-password" class="form-label">New Password</label>
-            <input type="password" class="form-control" id="new-password" required>
-          </div>
-          <div class="mb-3">
-            <label for="confirm-password" class="form-label">Confirm New Password</label>
-            <input type="password" class="form-control" id="confirm-password" required>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Change Password</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
 
-    <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
     <script>
-const token = localStorage.getItem('token');
-let currentUser = {};
-let trips = [];
-let reservations = [];
+        // IMPORTANT: REPLACE THIS WITH YOUR ACTUAL APP NAME AND CONTACT EMAIL FOR NOMINATIM USER-AGENT
+        const USER_AGENT_STRING = 'PassengerDashboardApp/1.0 (your.email@example.com)'; // <-- REPLACE THIS
 
-// DOM Elements
-const changePasswordForm = document.getElementById('change-password-form');
-const logoutBtn = document.getElementById('logout-btn');
-const newReservationBtn = document.getElementById('new-reservation-btn');
-const changePasswordBtn = document.getElementById('change-password-btn');
-const profileForm = document.getElementById('profile-form');
+        const token = localStorage.getItem('token');
+        let currentUser = {};
+        let trips = [];
+        let reservations = [];
 
-const editFirstName = document.getElementById('edit-first-name');
-const editLastName = document.getElementById('edit-last-name');
-const editEmail = document.getElementById('edit-email');
+        // DOM Elements
+        const changePasswordForm = document.getElementById('change-password-form');
+        const logoutBtn = document.getElementById('logout-btn');
+        const newReservationBtn = document.getElementById('new-reservation-btn');
+        const profileForm = document.getElementById('profile-form');
 
-const userNameElements = document.querySelectorAll('#user-name, #profile-name');
-const userAvatarElements = document.querySelectorAll('.avatar, .avatar-lg');
-const userEmailElement = document.getElementById('profile-email');
+        const editFirstName = document.getElementById('edit-first-name');
+        const editLastName = document.getElementById('edit-last-name');
+        const editEmail = document.getElementById('edit-email');
 
-const departureSelect = document.getElementById('departure');
-const destinationSelect = document.getElementById('destination');
-const availableTripsContainer = document.getElementById('available-trips-container');
+        const userNameElements = document.querySelectorAll('#user-name, #profile-name');
+        const userAvatarElements = document.querySelectorAll('.avatar, .avatar-lg');
+        const userEmailElement = document.getElementById('profile-email');
 
-const reservationsTableBody = document.querySelector('#reservations-table tbody');
-const allReservationsTableBody = document.querySelector('#all-reservations-table tbody');
+        const departureSelect = document.getElementById('departure');
+        const destinationSelect = document.getElementById('destination');
+        const availableTripsContainer = document.getElementById('available-trips-container');
+        const tripMapContainer = document.getElementById('trip-map-container');
 
-const activeReservationsElement = document.getElementById('active-reservations');
-const pendingPaymentsElement = document.getElementById('pending-payments');
-const upcomingTripsElement = document.getElementById('upcoming-trips');
 
-const navLinks = document.querySelectorAll('.nav-link');
-const currentDateElement = document.getElementById('current-date');
-const sections = {
-    dashboard: document.getElementById('dashboard-section'),
-    reservations: document.getElementById('reservations-section'),
-    trips: document.getElementById('trips-section'),
-    profile: document.getElementById('profile-section')
-};
+        const reservationsTableBody = document.querySelector('#reservations-table tbody');
+        const allReservationsTableBody = document.querySelector('#all-reservations-table tbody');
 
-document.addEventListener('DOMContentLoaded', async function () {
-    updateCurrentDate();
-    await loadUserData();
-    await loadReservations();
-    initProfileForm();
-    setupEventListeners();
-});
+        const activeReservationsElement = document.getElementById('active-reservations');
+        const pendingPaymentsElement = document.getElementById('pending-payments');
+        const upcomingTripsElement = document.getElementById('upcoming-trips');
 
-// 🕒 Show current date
-function updateCurrentDate() {
-    const now = new Date();
-    currentDateElement.textContent = now.toLocaleDateString('en-US', {
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-    });
-}
+        const navLinks = document.querySelectorAll('.nav-link');
+        const currentDateElement = document.getElementById('current-date');
+        const sections = {
+            dashboard: document.getElementById('dashboard-section'),
+            reservations: document.getElementById('reservations-section'),
+            trips: document.getElementById('trips-section'),
+            profile: document.getElementById('profile-section')
+        };
 
-// 🧍 Load profile from API
-async function loadUserData() {
-    const res = await fetch('/api/profile', {
-        method: 'GET',
-        headers: { Authorization: `Bearer ${token}` }
-    });
-    const data = await res.json();
-    currentUser = data;
+        // Map variables
+        let tripMap = null;
+        let currentRouteControl = null;
 
-    userNameElements.forEach(el => el.textContent = `${data.nom} ${data.prenom}`);
-    userAvatarElements.forEach(el => el.textContent = `${data.nom[0]}${data.prenom[0]}`);
-    userEmailElement.textContent = data.email;
 
-    editFirstName.value = data.nom;
-    editLastName.value = data.prenom;
-    editEmail.value = data.email;
-}
+        document.addEventListener('DOMContentLoaded', async function() {
+            updateCurrentDate();
+            await loadUserData();
+            initProfileForm();
+            await loadReservations();
+            setupEventListeners();
+        });
 
-// 📥 Load all reservations
-async function loadReservations() {
-    const res = await fetch('/api/reservations', {
-        headers: { Authorization: `Bearer ${token}` }
-    });
-    reservations = await res.json();
-    loadDashboardStats();
-    loadRecentReservations();
-    loadAllReservations();
-}
+        // 🕒 Show current date
+        function updateCurrentDate() {
+            if (!currentDateElement) return;
+            const now = new Date();
+            currentDateElement.textContent = now.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
 
-// 📊 Dashboard summary
-function loadDashboardStats() {
-    const today = new Date().toISOString().split('T')[0];
-    const active = reservations.filter(r => r.etat === 'confirmed').length;
-    const unpaid = reservations.filter(r => r.statutPaiement === 'unpaid').length;
-    const upcoming = reservations.filter(r => r.dateReservation >= today).length;
+        // 🧍 Load profile from API
+        async function loadUserData() {
+            if (!token) {
+                console.warn("No token found, user might not be logged in.");
+                return;
+            }
+            try {
+                const res = await fetch('/api/profile', {
+                    method: 'GET',
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+                if (!res.ok) throw new Error('Failed to load user data, status: ' + res.status);
+                const data = await res.json();
+                currentUser = data;
 
-    activeReservationsElement.textContent = active;
-    pendingPaymentsElement.textContent = unpaid;
-    upcomingTripsElement.textContent = upcoming;
-}
+                userNameElements.forEach(el => el.textContent = `${data.nom} ${data.prenom}`);
+                userAvatarElements.forEach(el => el.textContent = `${data.nom[0]}${data.prenom[0]}`);
+                if (userEmailElement) userEmailElement.textContent = data.email;
 
-// 🧾 Load recent reservations (5)
-function loadRecentReservations() {
-    reservationsTableBody.innerHTML = '';
-    [...reservations].reverse().slice(0, 5).forEach(res => {
-        reservationsTableBody.innerHTML += `
+                if (editFirstName) editFirstName.value = data.nom;
+                if (editLastName) editLastName.value = data.prenom;
+                if (editEmail) editEmail.value = data.email;
+            } catch (error) {
+                console.error("Error loading user data:", error);
+            }
+        }
+
+        // 📥 Load all reservations
+        async function loadReservations() {
+            if (!token) return;
+            try {
+                const res = await fetch('/api/reservations', {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+                if (!res.ok) throw new Error('Failed to load reservations, status: ' + res.status);
+                reservations = await res.json();
+                loadDashboardStats();
+                loadRecentReservations();
+                loadAllReservations();
+            } catch (error) {
+                console.error("Error loading reservations:", error);
+            }
+        }
+
+        // 📊 Dashboard summary
+        function loadDashboardStats() {
+            if (!reservations || !activeReservationsElement || !pendingPaymentsElement || !upcomingTripsElement) return;
+            const today = new Date().toISOString().split('T')[0];
+            const active = reservations.filter(r => (r.etat === 'confirmed' || r.etat === 'confirmée') && r.statutPaiement === 'paid').length;
+            const unpaid = reservations.filter(r => r.statutPaiement === 'unpaid').length;
+            const upcoming = reservations.filter(r => new Date(r.dateReservation) >= new Date(today) && (r.etat === 'confirmed' || r.etat === 'confirmée')).length;
+            activeReservationsElement.textContent = active;
+            pendingPaymentsElement.textContent = unpaid;
+            upcomingTripsElement.textContent = upcoming;
+        }
+
+        // 🧾 Load recent reservations (5)
+        function loadRecentReservations() {
+            if (!reservationsTableBody || !reservations) return;
+            reservationsTableBody.innerHTML = '';
+            if (reservations.length === 0) return;
+            [...reservations].reverse().slice(0, 5).forEach(res => {
+                        const paymentStatus = res.statutPaiement === 'paid' ? 'badge-success' : (res.statutPaiement === 'pending' ? 'badge-warning' : 'badge-danger');
+                        reservationsTableBody.innerHTML += `
         <tr>
           <td>${res.lieuDepart} → ${res.lieuArrivee}</td>
-          <td>${res.dateReservation}</td>
+          <td>${new Date(res.dateReservation).toLocaleDateString()}</td>
           <td>${res.nbrPlaces || 1}</td>
           <td><span class="badge ${getStatusClass(res.etat)}">${res.etat}</span></td>
-          <td><span class="badge ${res.statutPaiement === 'paid' ? 'badge-success' : 'badge-warning'}">${res.statutPaiement}</span></td>
-          <td>${res.statutPaiement === 'unpaid' ? `<button class="btn btn-sm btn-primary pay-btn" data-id="${res.idReservation}">Pay</button>` : '—'}</td>
+          <td><span class="badge ${paymentStatus}">${res.statutPaiement}</span></td>
+          <td>${res.statutPaiement === 'unpaid' ? `<button class="btn btn-sm btn-primary pay-btn" data-reservation-id="${res.idReservation}">Pay</button>` : (res.statutPaiement === 'pending' ? `<button class="btn btn-sm btn-warning" disabled>Pending<span class="pending-dots"></span></button>` : '—')}</td>
         </tr>`;
     });
-
-    document.querySelectorAll('.pay-btn').forEach(btn =>
-        btn.addEventListener('click', () => payReservation(btn.dataset.id))
-    );
+    attachPayButtonListeners('#reservations-table');
 }
 
 // 📋 Load all reservations
 function loadAllReservations() {
+    if (!allReservationsTableBody || !reservations) return;
     allReservationsTableBody.innerHTML = '';
+    if (reservations.length === 0) return;
     reservations.forEach(res => {
+        const paymentStatusClass = res.statutPaiement === 'paid' ? 'badge-success' : (res.statutPaiement === 'pending' ? 'badge-warning' : 'badge-danger');
+        let paymentButtonHtml = '—';
+        if (res.statutPaiement === 'unpaid') {
+            paymentButtonHtml = `<button class="btn btn-sm btn-primary pay-btn me-1" data-reservation-id="${res.idReservation}">Pay</button>`;
+        } else if (res.statutPaiement === 'pending') {
+            paymentButtonHtml = `<button class="btn btn-sm btn-warning me-1" disabled>Pending<span class="pending-dots"></span></button>`;
+        }
         allReservationsTableBody.innerHTML += `
         <tr>
-          <td>${res.lieuDepart} → ${res.lieuArrivee}</td>
-          <td>${res.heureDepart}</td>
-          <td>${res.heureArrivee}</td>
-          <td>${res.dateReservation}</td>
-          <td>${res.nbrPlaces || 1}</td>
-          <td>${res.prix * (res.nbrPlaces || 1)} DZD</td>
-          <td><span class="badge ${getStatusClass(res.etat)}">${res.etat}</span></td>
-          <td><span class="badge ${res.statutPaiement === 'paid' ? 'badge-success' : 'badge-warning'}">${res.statutPaiement}</span></td>
-          <td>${res.statutPaiement === 'unpaid' ? `<button class="btn btn-sm btn-primary pay-btn" data-id="${res.idReservation}">Pay</button>` : '—'}</td>
+            <td>${res.lieuDepart} → ${res.lieuArrivee}</td>
+            <td>${res.heureDepart}</td>
+            <td>${res.heureArrivee}</td>
+            <td>${new Date(res.dateReservation).toLocaleDateString()}</td>
+            <td>${res.nbrPlaces || 1}</td>
+            <td>${(res.prix * (res.nbrPlaces || 1)).toFixed(2)} DZD</td>
+            <td><span class="badge ${getStatusClass(res.etat)}">${res.etat}</span></td>
+            <td><span class="badge ${paymentStatusClass}">${res.statutPaiement}</span></td>
+            <td>
+                ${paymentButtonHtml}
+                ${ (res.etat !== 'cancelled' && res.etat !== 'completed') ? 
+                    `<button class="btn btn-sm btn-warning edit-btn me-1" data-id="${res.idReservation}">Edit</button>
+                     <button class="btn btn-sm btn-danger cancel-btn" data-id="${res.idReservation}">Cancel</button>` : ''
+                }
+            </td>
         </tr>`;
     });
-    // Attach event listeners after rows are inserted
-document.querySelectorAll('.pay-btn').forEach(btn =>
-  btn.addEventListener('click', () => payReservation(btn.dataset.id))
-);
+    attachPayButtonListeners('#all-reservations-table');
+    document.querySelectorAll('#all-reservations-table .edit-btn').forEach(btn => btn.addEventListener('click', () => editReservation(btn.dataset.id)));
+    document.querySelectorAll('#all-reservations-table .cancel-btn').forEach(btn => btn.addEventListener('click', () => cancelReservation(btn.dataset.id)));
+}
 
-document.querySelectorAll('.edit-btn').forEach(btn =>
-  btn.addEventListener('click', () => editReservation(btn.dataset.id))
-);
-
-document.querySelectorAll('.cancel-btn').forEach(btn =>
-  btn.addEventListener('click', () => cancelReservation(btn.dataset.id))
-);
-
-    document.querySelectorAll('.pay-btn').forEach(btn =>
-        btn.addEventListener('click', () => payReservation(btn.dataset.id))
-    );
+function attachPayButtonListeners(tableSelector) {
+    document.querySelectorAll(`${tableSelector} .pay-btn`).forEach(btn => {
+        const newBtn = btn.cloneNode(true); 
+        btn.parentNode.replaceChild(newBtn, btn);
+        newBtn.addEventListener('click', (event) => visualPayHandler(event.target.dataset.reservationId, event.target));
+    });
 }
 
 // 🚍 Search for trips
-async function searchTrips() {
-    const from = departureSelect.value;
-    const to = destinationSelect.value;
-    const date = document.getElementById('travel-date').value;
-    const time = "08:00";
+async function searchTrips(event) {
+    event.preventDefault(); 
+    try {
+        const departure = departureSelect.value;
+        const destination = destinationSelect.value;
+        const date = document.getElementById('travel-date').value;
+        if (!departure || !destination || !date) return alert('Please fill in all fields including the date.');
+        
+        console.log(`Searching trips from ${departure} to ${destination} on ${date}`);
+        
+        const res = await fetch('/api/trajets/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ depart: departure, destination: destination, date: date })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "No trips found from API.");
+        trips = data; 
+        displayTripResults(data);
 
-    const res = await fetch('/api/trajets', {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ from, to, date, time })
-    });
-
-    trips = await res.json();
-    displayTripResults(trips);
+    } catch (err) {
+        console.error('Search error:', err);
+        availableTripsContainer.innerHTML = `<div class="alert alert-danger">Error searching for trips: ${err.message}</div>`;
+        tripMapContainer.style.display = 'none';
+        if (currentRouteControl && tripMap) { tripMap.removeControl(currentRouteControl); currentRouteControl = null; }
+    }
 }
 
 // 📍 Show trip results
-function displayTripResults(trips) {
+function displayTripResults(foundTrips) {
     availableTripsContainer.innerHTML = '';
-
-    if (!trips.length) {
-        availableTripsContainer.innerHTML = `<div class="alert alert-info">No trips found</div>`;
+    if (!foundTrips || foundTrips.length === 0) {
+        availableTripsContainer.innerHTML = `<div class="alert alert-info">No trips found for your search criteria.</div>`;
+        tripMapContainer.style.display = 'none';
+        if (currentRouteControl && tripMap) { tripMap.removeControl(currentRouteControl); currentRouteControl = null; }
         return;
     }
+    
+    console.log("Displaying trip results. Trips found:", foundTrips);
+    initTripMap(); 
 
-    trips.forEach(trip => {
+    const firstTrip = foundTrips[0];
+    if (firstTrip && firstTrip.depart && firstTrip.destination) {
+       console.log(`Attempting to show route for first trip: ${firstTrip.depart} to ${firstTrip.destination}`);
+       showRouteOnMap(firstTrip.depart, firstTrip.destination);
+    } else {
+       console.warn("First trip data is incomplete for map display. Hiding map.");
+       tripMapContainer.style.display = 'none';
+    }
+
+    foundTrips.forEach(trip => { 
         const card = document.createElement('div');
         card.className = 'card mb-3';
         card.innerHTML = `
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-8">
+                    <div class="col-md-7">
                         <h5>${trip.depart} to ${trip.destination}</h5>
-                        <p><i class="bi bi-clock"></i> ${trip.heureDepart} | Service: ${trip.idService}</p>
+                        <p><i class="bi bi-clock"></i> Dep: ${trip.heureDepart}, Arr: ${trip.heureArrivee}</p>
+                        <p><i class="bi bi-bus-front"></i> Service ID: ${trip.idService}</p>
                     </div>
-                    <div class="col-md-4 text-end">
+                    <div class="col-md-5 text-end">
                         <h4 class="text-primary">${trip.prix} DZD</h4>
-                        <form class="book-form" data-trip-id="${trip.idTrajet}">
-                            <input type="number" class="form-control mb-2" value="1" min="1" />
-                            <button class="btn btn-primary btn-sm" type="submit">Book Now</button>
+                        <button class="btn btn-sm btn-info show-route-btn mb-2" data-depart="${trip.depart}" data-dest="${trip.destination}">Show Route</button>
+                        <form class="book-form" data-trip-id="${trip.idService}">
+                            <div class="mb-2">
+                                <input type="number" class="form-control mb-2 seat-count" value="1" min="1" max="10" required>
+                                <input type="date" class="form-control travel-date" value="${document.getElementById('travel-date').value}" required>
+                            </div>
+                            <button class="btn btn-primary" type="submit">Book Now</button>
                         </form>
                     </div>
                 </div>
-            </div>`;
+            </div>
+        `;
         availableTripsContainer.appendChild(card);
     });
-
+    
+    document.querySelectorAll('.show-route-btn').forEach(btn => {
+        btn.addEventListener('click', function() { 
+            console.log(`Show Route button clicked for: ${this.dataset.depart} to ${this.dataset.dest}`);
+            showRouteOnMap(this.dataset.depart, this.dataset.dest); 
+        });
+    });
     document.querySelectorAll('.book-form').forEach(form => {
         form.addEventListener('submit', async function (e) {
             e.preventDefault();
-            const tripId = parseInt(this.dataset.tripId);
-            const seats = parseInt(this.querySelector('input').value);
-            const date = document.getElementById('travel-date').value;
-            await bookTrip(tripId, seats, date);
+            if (!token) return alert("Not logged in. Please log in to book.");
+            const tripId = this.dataset.tripId;
+            const seats = parseInt(this.querySelector('.seat-count').value);
+            const travelDate = this.querySelector('.travel-date').value;
+            if (!tripId || !seats || seats <= 0 || !travelDate) return alert('Please select valid seats and travel date.');
+            try {
+                const res = await fetch('/api/reservations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ trajetId: tripId, date: travelDate, nbrPlaces: seats })
+                });
+                const result = await res.json();
+                if (!res.ok) throw new Error(result.error || 'Booking failed');
+                alert('Reservation successful!');
+                await loadReservations(); 
+                document.querySelector('[data-section="reservations"]').click();
+            } catch (err) {
+                console.error('Booking error:', err);
+                alert('Error: ' + err.message);
+            }
         });
     });
 }
 
-// 📝 Book a trip
-async function bookTrip(tripId, seats, date) {
-    await fetch('/api/reservations', {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ tripId, date, seats })
-    });
-    alert('Reservation successful');
-    await loadReservations();
+// 🗺️ Map Functions
+function initTripMap() {
+    if (!tripMap && tripMapContainer) { 
+        tripMapContainer.style.display = 'block'; 
+        try {
+            tripMap = L.map('trip-map-container').setView([28.0339, 1.6596], 5); // Algeria center
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 18,
+            }).addTo(tripMap);
+            console.log("MAP: Map initialized successfully.");
+        } catch (e) {
+            console.error("MAP: Error initializing Leaflet map:", e);
+            tripMapContainer.innerHTML = "<p class='text-danger'>Error loading map. Please try again later.</p>";
+            return; 
+        }
+    }
+    setTimeout(() => { 
+      if(tripMap) {
+        console.log("MAP: Invalidating map size.");
+        tripMap.invalidateSize(); 
+      }
+    }, 200); 
 }
 
-// 💸 Mark reservation as paid
-async function payReservation(id) {
-    await fetch(`/api/reservations/${id}/pay`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    alert('Payment completed');
-    await loadReservations();
+async function geocodeLocation(locationName) {
+    console.log(`GEOCODING: Starting for "${locationName}"`);
+    const nominatimUrlBase = `https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=en`;
+
+    const attempts = [
+        { query: `${locationName}, Algeria`, countryCodes: 'dz', description: "Location, Algeria (DZ)" },
+        { query: locationName, countryCodes: 'dz', description: "Location (DZ)" },
+        { query: locationName, countryCodes: '', description: "Location (Global)" }
+    ];
+
+    for (let i = 0; i < attempts.length; i++) {
+        const attempt = attempts[i];
+        let url = `${nominatimUrlBase}&q=${encodeURIComponent(attempt.query)}`;
+        if (attempt.countryCodes) {
+            url += `&countrycodes=${attempt.countryCodes}`;
+        }
+        
+        console.log(`GEOCODING: Attempt ${i+1} (${attempt.description}) - URL: ${url}`);
+        try {
+            const response = await fetch(url, { headers: { 'User-Agent': USER_AGENT_STRING } });
+            console.log(`GEOCODING: Attempt ${i+1} - Nominatim response status: ${response.status}`);
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.warn(`GEOCODING: Nominatim HTTP error! Status: ${response.status} for query: ${attempt.query}. Response: ${errorText}`);
+                continue; 
+            }
+            const data = await response.json();
+            console.log(`GEOCODING: Attempt ${i+1} - Raw response for "${attempt.query}":`, JSON.stringify(data));
+            if (data.length > 0 && data[0].lat && data[0].lon) {
+                const coords = { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+                console.log(`GEOCODING: SUCCESS (Attempt ${i+1}) for "${locationName}":`, coords);
+                return coords;
+            }
+        } catch (error) {
+            console.error(`GEOCODING: Network or JSON parsing error during attempt ${i+1} for "${attempt.query}":`, error);
+        }
+    }
+    console.error(`GEOCODING: FAILED for "${locationName}" after all attempts.`);
+    return null;
+}
+
+async function showRouteOnMap(departName, destName) {
+    console.log(`MAP: Attempting to show route from "${departName}" to "${destName}"`);
+    if (!tripMap) {
+        console.log("MAP: Map not initialized, attempting to init now.");
+        initTripMap(); 
+        if (!tripMap) { 
+            console.error("MAP: Initialization failed, cannot show route.");
+            alert("Map could not be initialized. Cannot show route.");
+            return;
+        }
+    } else {
+        tripMap.invalidateSize(); 
+    }
+    
+    tripMapContainer.style.display = 'block';
+
+    const departCoords = await geocodeLocation(departName);
+    const destCoords = await geocodeLocation(destName);
+
+    console.log("MAP: Final Departure Coords after geocoding:", departCoords);
+    console.log("MAP: Final Destination Coords after geocoding:", destCoords);
+
+    if (currentRouteControl) { 
+        tripMap.removeControl(currentRouteControl);
+        currentRouteControl = null;
+        console.log("MAP: Previous route control removed.");
+    }
+
+    if (!departCoords || !destCoords) {
+        alert(`Could not display route: Geocoding failed for "${!departCoords ? departName : ''}" ${!departCoords && !destCoords ? 'and' : ''} "${!destCoords ? destName : ''}". Please check the browser console for more details (Press F12).`);
+        console.error("MAP: Geocoding failed for one or both locations. Cannot create route.");
+        return; 
+    }
+    
+    const startLat = parseFloat(departCoords.lat);
+    const startLon = parseFloat(departCoords.lon);
+    const endLat = parseFloat(destCoords.lat);
+    const endLon = parseFloat(destCoords.lon);
+
+    if (isNaN(startLat) || isNaN(startLon) || isNaN(endLat) || isNaN(endLon)) {
+        alert("Invalid coordinates received after geocoding. Cannot plot route.");
+        console.error("MAP: Invalid coordinates after parsing: ", {startLat, startLon, endLat, endLon});
+        return;
+    }
+
+    console.log(`MAP: Using Start Coords: ${startLat}, ${startLon} | End Coords: ${endLat}, ${endLon}`);
+
+    try {
+        currentRouteControl = L.Routing.control({
+            waypoints: [
+                L.latLng(startLat, startLon),
+                L.latLng(endLat, endLon)
+            ],
+            routeWhileDragging: false, 
+            showAlternatives: false, 
+            createMarker: function(i, waypoint, nWps) {
+                const label = i === 0 ? `Departure: ${departName}` : `Destination: ${destName}`;
+                return L.marker(waypoint.latLng).bindPopup(label);
+            },
+            lineOptions: { styles: [{color: 'blue', opacity: 0.8, weight: 6}] },
+            show: true, 
+            collapsible: true, 
+            plan: L.Routing.plan( [L.latLng(startLat, startLon), L.latLng(endLat, endLon)], {
+                createGeocoderElement: function() { return null; } 
+            })
+        });
+
+        currentRouteControl.on('routingerror', function(e) {
+            console.error("MAP: Leaflet Routing Error event:", e);
+            let errorMsg = "Could not find a route. ";
+            if (e.error && e.error.message) {
+                errorMsg += `Error: ${e.error.message}.`;
+            } else if (e.error && e.error.status) { // OSRM sometimes returns status for errors
+                 errorMsg += `Status: ${e.error.status}.`;
+            } else {
+                errorMsg += "The routing service might be unable to find a path between these locations or is temporarily unavailable. (Often 'Bounds are not valid' if coordinates are problematic or no road path exists).";
+            }
+            alert(errorMsg); // Display the alert to the user
+            if (currentRouteControl && tripMap) { tripMap.removeControl(currentRouteControl); currentRouteControl = null; }
+        }).on('routesfound', function(e) {
+            console.log("MAP: Routes found event triggered. Routes:", e.routes);
+            if (e.routes && e.routes.length > 0 && e.routes[0].coordinates && e.routes[0].coordinates.length > 0) {
+                console.log("MAP: Valid route found. Fitting bounds.");
+                tripMap.fitBounds(e.routes[0].bounds);
+                 console.log("MAP: Map bounds fitted to route.");
+            } else {
+                console.warn("MAP: 'routesfound' event, but e.routes is empty or invalid.", e.routes);
+                alert("A route path was requested, but the service returned no valid path data. This might indicate an issue with the locations or the routing data for this specific area.");
+                 if (currentRouteControl && tripMap) { tripMap.removeControl(currentRouteControl); currentRouteControl = null; }
+            }
+        }).addTo(tripMap);
+        console.log("MAP: Route control added to map.");
+    } catch(e) {
+            console.error("MAP: Error creating or adding L.Routing.control:", e);
+            alert("An unexpected error occurred while trying to display the route on the map.");
+    }
+    
+    if(tripMap) tripMap.invalidateSize(); 
+}
+
+// 💸 Visual Pay Handler
+function visualPayHandler(reservationId, buttonElement) {
+    console.log(`Visual pay for reservation ${reservationId}`);
+    if (buttonElement) {
+        buttonElement.innerHTML = 'Pending<span class="pending-dots"></span>';
+        buttonElement.disabled = true;
+        buttonElement.classList.remove('btn-primary');
+        buttonElement.classList.add('btn-warning');
+        const row = buttonElement.closest('tr');
+        if (row) {
+            const paymentBadgeCell = row.cells[row.cells.length - 2]; 
+            if(paymentBadgeCell){
+                const paymentBadge = paymentBadgeCell.querySelector('.badge');
+                if (paymentBadge) {
+                    paymentBadge.className = 'badge badge-warning';
+                    paymentBadge.textContent = 'pending';
+                }
+            }
+        }
+    }
+    const reservation = reservations.find(r => r.idReservation == reservationId);
+    if (reservation) reservation.statutPaiement = 'pending'; 
 }
 
 // ✅ Utility: badge color
 function getStatusClass(status) {
-    return status === 'confirmed' ? 'badge-success'
-         : status === 'pending' ? 'badge-warning'
-         : 'badge-danger';
+    const s = status ? status.toLowerCase() : '';
+    if (s === 'confirmed' || s === 'confirmée') return 'badge-success';
+    if (s === 'pending' || s === 'en attente') return 'badge-warning';
+    return 'badge-danger';
 }
 
 // ✏️ Update profile
-profileForm.addEventListener('submit', async function (e) {
-    e.preventDefault();
-    await fetch('/api/update', {
-        method: 'PUT',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            nom: editFirstName.value,
-            prenom: editLastName.value,
-            email: editEmail.value
-        })
+if(profileForm) {
+    profileForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        if (!token) return alert("Not logged in.");
+        try {
+            const res = await fetch('/api/update', {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nom: editFirstName.value, prenom: editLastName.value, email: editEmail.value })
+            });
+            if (!res.ok) { const errData = await res.json(); throw new Error(errData.error || 'Profile update failed'); }
+            alert('Profile updated');
+            await loadUserData();
+        } catch (error) { console.error("Profile update error:", error); alert(`Error: ${error.message}`); }
     });
-    alert('Profile updated');
-    await loadUserData();
-});
+}
+
 
 // 🔐 Change password logic
-document.getElementById('change-password-form').addEventListener('submit', async function (e) {
-  e.preventDefault();
+if(document.getElementById('change-password-form')) {
+    document.getElementById('change-password-form').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    if (!token) return alert("Not logged in.");
+    const currentPasswordInput = document.getElementById('current-password');
+    const newPasswordInput = document.getElementById('new-password');
+    const confirmPasswordInput = document.getElementById('confirm-password');
 
-  const currentPassword = document.getElementById('current-password').value;
-  const newPassword = document.getElementById('new-password').value;
-  const confirmPassword = document.getElementById('confirm-password').value;
-
-  if (newPassword !== confirmPassword) {
-    return alert('New passwords do not match.');
-  }
-
-  try {
-    const res = await fetch('/api/password', {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ currentPassword, newPassword })
-    });
-
-    const result = await res.json();
-
-    if (res.ok) {
-      alert('Password changed successfully!');
-      const modal = bootstrap.Modal.getInstance(document.getElementById('changePasswordModal'));
-      modal.hide();
-      this.reset();
-    } else {
-      alert(result.error || 'Password change failed.');
+    if(!currentPasswordInput || !newPasswordInput || !confirmPasswordInput) {
+        console.error("Password change form elements not found.");
+        return;
     }
-  } catch (err) {
-    console.error('Password change error:', err);
-    alert('An error occurred while changing the password.');
-  }
-});
+
+    const currentPassword = currentPasswordInput.value;
+    const newPassword = newPasswordInput.value;
+    const confirmPassword = confirmPasswordInput.value;
+
+    if (newPassword !== confirmPassword) return alert('New passwords do not match.');
+    try {
+        const res = await fetch('/api/password', {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword, newPassword })
+        });
+        const result = await res.json();
+        if (res.ok) {
+        alert('Password changed successfully!');
+        const modalEl = document.getElementById('changePasswordModal');
+        const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+        modal.hide();
+        this.reset();
+        } else { alert(result.error || 'Password change failed.'); }
+    } catch (err) { console.error('Password change error:', err); alert('An error occurred.'); }
+    });
+}
+
 
 // ⚙️ Init profile fields
 function initProfileForm() {
-    editFirstName.value = currentUser.nom;
-    editLastName.value = currentUser.prenom;
-    editEmail.value = currentUser.email;
+    if (currentUser && currentUser.nom && editFirstName) editFirstName.value = currentUser.nom;
+    if (currentUser && currentUser.prenom && editLastName) editLastName.value = currentUser.prenom;
+    if (currentUser && currentUser.email && editEmail) editEmail.value = currentUser.email;
 }
 
 // 🔁 UI Events
@@ -823,101 +1225,75 @@ function setupEventListeners() {
             e.preventDefault();
             navLinks.forEach(l => l.classList.remove('active'));
             this.classList.add('active');
-            Object.values(sections).forEach(s => s.classList.remove('active'));
-            sections[this.dataset.section].classList.add('active');
+            Object.values(sections).forEach(s => { if(s) s.classList.remove('active');} ); // Check if section exists
+            const activeSection = sections[this.dataset.section];
+            if(activeSection) activeSection.classList.add('active');
+            
+            if (this.dataset.section === 'trips') {
+                initTripMap(); 
+                if(tripMap) tripMap.invalidateSize();
+            }
         });
     });
-
-    document.getElementById('trip-search-form').addEventListener('submit', function (e) {
-        e.preventDefault();
-        searchTrips();
-    });
-
-    logoutBtn.addEventListener('click', function () {
-        localStorage.removeItem('token');
-        window.location.href = 'login.html';
-    });
-
-    newReservationBtn.addEventListener('click', function () {
-        navLinks.forEach(l => l.classList.remove('active'));
-        document.querySelector('[data-section="trips"]').classList.add('active');
-        Object.values(sections).forEach(s => s.classList.remove('active'));
-        sections.trips.classList.add('active');
-    });
-}
-// 💸 PAY RESERVATION
-function payReservation(reservationId) {
-  fetch(`/api/reservations/${reservationId}/pay`, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `Bearer ${token}`
+    if(document.getElementById('trip-search-form')) {
+        document.getElementById('trip-search-form').addEventListener('submit', searchTrips);
     }
-  })
-    .then(res => res.json())
-    .then(data => {
-      alert('Payment successful!');
-      loadReservations();
-    })
-    .catch(err => {
-      console.error('Payment error:', err);
-      alert('Error processing payment.');
-    });
+    if(logoutBtn) {
+        logoutBtn.addEventListener('click', function () {
+            localStorage.removeItem('token');
+            window.location.href = 'login'; // Or your actual login page
+        });
+    }
+    if(newReservationBtn) {
+        newReservationBtn.addEventListener('click', function () {
+            const tripsNavLink = document.querySelector('.nav-link[data-section="trips"]');
+            if (tripsNavLink) tripsNavLink.click();
+        });
+    }
+}
+// ✏️ EDIT RESERVATION
+async function editReservation(reservationId) {
+    if (!token) return alert("Not logged in.");
+    const reservation = reservations.find(r => r.idReservation == reservationId);
+    if (!reservation) return alert("Reservation not found.");
+    const currentDate = reservation.dateReservation.split('T')[0]; 
+    const newDateStr = prompt("Enter new reservation date (YYYY-MM-DD):", currentDate);
+    if (!newDateStr) return; 
+    const newSeatsStr = prompt("Enter new number of seats:", reservation.nbrPlaces);
+    if (!newSeatsStr) return; 
+    const newSeats = parseInt(newSeatsStr);
+    if (isNaN(newSeats) || newSeats <= 0) return alert("Invalid number of seats.");
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(newDateStr)) return alert("Invalid date format. Please use YYYY-MM-DD.");
+    try {
+        const res = await fetch(`/api/reservations/${reservationId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ nbrPlaces: newSeats, dateReservation: newDateStr })
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || 'Update failed');
+        alert('Reservation updated successfully!');
+        await loadReservations(); 
+    } catch (err) { console.error('Edit error:', err); alert('Error: ' + err.message); }
 }
 
 // ❌ CANCEL RESERVATION
-function cancelReservation(reservationId) {
-  if (confirm('Are you sure you want to cancel this reservation?')) {
-    fetch(`/api/reservations/${reservationId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    })
-      .then(res => res.json())
-      .then(data => {
-        alert('Reservation cancelled.');
-        loadReservations();
-      })
-      .catch(err => {
-        console.error('Cancel error:', err);
-        alert('Failed to cancel reservation.');
-      });
-  }
+async function cancelReservation(reservationId) {
+    if (!token) return alert("Not logged in.");
+    if (!confirm('Are you sure you want to cancel this reservation?')) return;
+    try {
+        const res = await fetch(`/api/reservations/${reservationId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) { const error = await res.json(); throw new Error(error.message || 'Cancellation failed'); }
+        alert('Reservation cancelled successfully!');
+        await loadReservations(); 
+    } catch (err) { console.error('Cancel error:', err); alert('Error: ' + err.message); }
 }
-
-// ✏️ EDIT RESERVATION
-function editReservation(reservationId) {
-  const newDate = prompt("Enter new reservation date (YYYY-MM-DD):");
-  const newSeats = prompt("Enter new number of seats:");
-
-  if (!newDate || !newSeats) {
-    return alert("Edit cancelled. Missing values.");
-  }
-
-  fetch(`/api/reservations/${reservationId}/edit`, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      dateReservation: newDate,
-      nbrPlaces: parseInt(newSeats)
-    })
-  })
-    .then(res => res.json())
-    .then(data => {
-      alert('Reservation updated.');
-      loadReservations();
-    })
-    .catch(err => {
-      console.error('Edit error:', err);
-      alert('Failed to edit reservation.');
-    });
-}
-
-</script>
-
+    </script>
 
 </body>
+
 </html>

@@ -1,13 +1,14 @@
 import {
     getAllReservationsForCashier,
     setReservationPaid,
-    setReservationUnpaid
+    rejectReservation as rejectReservationModel
   } from '../models/payment.model.js';
   
   // 📄 GET /api/payments/reservations
   export const getAllReservations = async (req, res) => {
     try {
       const reservations = await getAllReservationsForCashier();
+      console.log(reservations);  
       res.json(reservations);
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -25,12 +26,11 @@ import {
   };
   
   // ❌ PUT /api/payments/:id/unpaid
-  export const markAsUnpaid = async (req, res) => {
-    try {
-      await setReservationUnpaid(req.params.id);
-      res.json({ message: 'Reservation marked as unpaid' });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  };
-  
+export const rejectReservation = async (req, res) => {
+  try {
+    await rejectReservationModel(req.params.id); 
+    res.json({ message: 'Reservation rejected' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
