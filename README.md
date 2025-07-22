@@ -26,14 +26,15 @@ A comprehensive web application designed to simplify transportation service mana
 ## ⚙️ How to Run Locally
 
 1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/Yaakoub-Bourekba/TransportBookingSystem.git
+```bash
+git clone https://github.com/Yaakoub-Bourekba/TransportBookingSystem.git
+```
 2. Navigate to the project directory: 
 ```
 cd TransportBookingSystem
 ```
-3. npm install
+3. Install dependencies:
+```npm install```
 4. npm run dev
 5. http://localhost:3000
 
