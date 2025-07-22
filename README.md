@@ -29,7 +29,10 @@ A comprehensive web application designed to simplify transportation service mana
 
    ```bash
    git clone https://github.com/Yaakoub-Bourekba/TransportBookingSystem.git
-2. cd TransportBookingSystem
+2. Navigate to the project directory: 
+```
+cd TransportBookingSystem
+```
 3. npm install
 4. npm run dev
 5. http://localhost:3000
@@ -37,6 +40,7 @@ A comprehensive web application designed to simplify transportation service mana
 ---
 
 ## 📁 Project Structure
+
 ```
 TransportBookingSystem/
 ├── config/                 # Configuration files (e.g., database settings)
