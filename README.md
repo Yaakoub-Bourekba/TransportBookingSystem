@@ -80,10 +80,10 @@ TransportBookingSystem/
 │   └── user.model.js
 │
 ├── public/
-│   ├──
-│   ├──
-│   ├──
-│   └──
+│   ├── 550x400_Algerie-Oran_brux-photos-2-nGSJi54fo-unsplash-1-1.jpg
+│   ├── arton41-4c5a9.jpg
+│   ├── djanet-sahara-algerie.jpg
+│   └── Pont_de_sidi_Rached_-_Constantine_جسر_سيدي_راشد_-_قسنطينة.jpg
 │
 ├── routes/
 │   ├── auth.routes.js
