@@ -37,7 +37,7 @@ A comprehensive web application designed to simplify transportation service mana
 ---
 
 ## 📁 Project Structure
-
+```
 TransportBookingSystem/
 ├── config/                 # Configuration files (e.g., database settings)
 ├── controllers/            # Logic for handling requests and responses
@@ -53,7 +53,7 @@ TransportBookingSystem/
 ├── package-lock.json       # Dependency lock file
 ├── server.js               # Entry point of the application
 ├── transportservicedb.sql  # SQL file for database setup
-
+```
 ---
 
 ## 🧑‍💻 Contribution
